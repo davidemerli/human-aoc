@@ -9,6 +9,14 @@ import classnames from "classnames";
 const Home: NextPage<{ day: number; year: number }> = ({ day, year }) => {
   const { data: session, status } = useSession();
 
+  if (status === 'loading') {
+    return <div>Loading...</div>
+  }
+
+  if (status === 'unauthenticated') {
+    return <div>Please, authenticate</div>
+  }
+
   const [aocCookie, setAocCookie] = useState(() => {
     if (typeof window === "undefined") return "";
 
@@ -21,31 +29,42 @@ const Home: NextPage<{ day: number; year: number }> = ({ day, year }) => {
     return "";
   });
 
-  const hello = trpc.example.getAoc.useQuery(aocCookie);
 
+  const { data: hello, isLoading, isError } = trpc.example.getAoc.useQuery(aocCookie);
+  const { data: aocText, isLoading: isLoadingAocText, isError: isErrorAocText } = trpc.example.getAocText.useQuery({
+    day,
+    year,
+    cookie: aocCookie,
+  });
+
+  if (isError || isErrorAocText) {
+    return <div>Something went wrong. Try again!</div>
+  }
+
+  if (isLoading || isLoadingAocText) {
+    return <div>Loading...</div>
+  }
+
+  // Fron now we should have hello fully Loaded, and hopefully with Type Inference!
+
+  // Not sure what is happening here... were does aocCookie come from?
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     localStorage.setItem("aocCookie", JSON.stringify(aocCookie));
   }, [aocCookie]);
 
-  const aocText = trpc.example.getAocText.useQuery({
-    day,
-    year,
-    cookie: aocCookie,
-  });
-
   const [fontSize, setFontSize] = useState(16);
 
   const puzzleAnswers = useMemo(() => {
-    if (!aocText.data) return [];
+    if (!aocText) return [];
 
     const regex = /<p>Your puzzle answer was <code>(\d+)<\/code>/g;
 
-    const matches = [...aocText.data.matchAll(regex)];
+    const matches = [...aocText.matchAll(regex)];
 
     return matches.map((match) => match[1]);
-  }, [aocText.data]);
+  }, [aocText]);
 
   return (
     <>
@@ -58,20 +77,8 @@ const Home: NextPage<{ day: number; year: number }> = ({ day, year }) => {
         <div className="flex h-full w-full flex-row gap-8 overflow-scroll p-4">
           <div className="flex h-full w-full flex-col gap-4 overflow-scroll">
             <div className="mt-2 flex w-full flex-row gap-2">
-              {new Array(2).fill(0).map((_, i) => (
-                <input
-                  key={i}
-                  className={classnames(
-                    "monospace input input-primary flex-grow text-xl font-medium",
-                    {
-                      "input-disabled disabled pointer-events-none border-yellow-200":
-                        puzzleAnswers[i],
-                    }
-                  )}
-                  placeholder={`Part ${i + 1}`}
-                  value={puzzleAnswers[i] || ""}
-                />
-              ))}
+              <AnswerInput part={1} puzzleAnswer={puzzleAnswers[0]}/>
+              <AnswerInput part={2} puzzleAnswer={puzzleAnswers[1]}/>
             </div>
             <AoC
               className="scroll h-full max-w-3xl overflow-scroll text-left text-xl"
@@ -101,7 +108,7 @@ const Home: NextPage<{ day: number; year: number }> = ({ day, year }) => {
                 className="btn-ghost btn"
                 onClick={() => {
                   const el = document.createElement("textarea");
-                  el.value = hello.data as string;
+                  el.value = hello as string;
                   document.body.appendChild(el);
                   el.select();
                   document.execCommand("copy");
@@ -117,7 +124,7 @@ const Home: NextPage<{ day: number; year: number }> = ({ day, year }) => {
                 fontSize: `${fontSize}px`,
               }}
             >
-              {hello.data}
+              {hello}
             </pre>
           </div>
         </div>
@@ -125,6 +132,20 @@ const Home: NextPage<{ day: number; year: number }> = ({ day, year }) => {
     </>
   );
 };
+
+const AnswerInput = ({ part, puzzleAnswer }: {part: number, puzzleAnswer: string}) => (
+  <input
+    className={classnames(
+      "monospace input input-primary flex-grow text-xl font-medium",
+      {
+        "input-disabled disabled pointer-events-none border-yellow-200":
+          puzzleAnswer,
+      }
+    )}
+    placeholder={`Part ${part}`}
+    value={puzzleAnswer || ""}
+  />
+);
 
 const getServerSideProps = async () => {
   // get day and year from url http://localhost:3000/2020/1
