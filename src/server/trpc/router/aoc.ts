@@ -23,11 +23,15 @@ export const aocRouter = router({
         },
       })
         .then((res) => res.text())
-        .then((text) =>
-          text.substring(
-            text.indexOf("<main>"),
-            text.indexOf("</main>") + "</main>".length
-          )
+        .then(
+          (text) =>
+            text
+              .substring(
+                text.indexOf("<main>"),
+                text.indexOf("</main>") + "</main>".length
+              )
+              //remove answer input form
+              .replace(/<form.*<\/form>/, "")
         )
         .then((text) => ({
           text,
@@ -50,6 +54,8 @@ export const aocRouter = router({
         },
       });
 
+      console.log(timer);
+
       // if there is no timer, create one
       if (!timer) {
         await ctx.prisma.timer.create({
@@ -58,10 +64,14 @@ export const aocRouter = router({
         // if there was a timer but it was not completed, update it to completed
         // NB: this happens when the user fetches the text after having solved one of the parts
         // i.e. after submitting an answer
-      } else if (!timer.stopTime && timer.star === info.stars) {
-        await ctx.prisma.timer.update({
+      } else if (timer.star === info.stars + 1) {
+        await ctx.prisma.timer.updateMany({
           where: {
-            userId_day_year_star: { userId, day, year, star: info.stars },
+            userId,
+            day,
+            year,
+            star: info.stars,
+            stopTime: null,
           },
           data: { stopTime: new Date() },
         });

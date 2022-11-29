@@ -110,4 +110,13 @@ const AoC = styled.div`
     color: #ffff66;
     text-shadow: 0 0 6px #ffff66;
   }
+
+  a {
+    color: #00ee00;
+    text-decoration: underline;
+
+    &:hover {
+      color: #aaffaa;
+    }
+  }
 `;

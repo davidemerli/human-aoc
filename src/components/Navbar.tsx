@@ -22,7 +22,7 @@ export const Navbar = () => {
     <div className="navbar bg-base-100 px-4">
       <div className="navbar-start">
         <Link
-          className="btn-ghost btn text-2xl font-bold normal-case"
+          className="text-xl font-bold normal-case"
           href="/"
           style={{
             color: "#00ff00",
@@ -84,8 +84,8 @@ const ProgressDisplay = ({ year, day }: { year: string; day: string }) => {
   if (isError) return <div>Error</div>;
 
   return (
-    <div className="navbar-center relative">
-      <>
+    <div className="navbar-center relative flex flex-col md:flex-row">
+      <div className="flex flex-row items-center">
         <a className="text-xl normal-case">
           {year} Day {day}
         </a>
@@ -105,7 +105,7 @@ const ProgressDisplay = ({ year, day }: { year: string; day: string }) => {
             </span>
           ))}
         </div>
-      </>
+      </div>
       <div className="mx-2 flex flex-row gap-2">
         <Timers year={year} day={day} />
       </div>
@@ -115,10 +115,7 @@ const ProgressDisplay = ({ year, day }: { year: string; day: string }) => {
 
 const Timers = ({ day, year }: { day: string; year: string }) => {
   const newDate = useCallback(
-    () =>
-      new Date(
-        new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000
-      ),
+    () => new Date(new Date().toLocaleString("en-US", { timeZone: "UTC" })),
     []
   );
 
@@ -151,21 +148,37 @@ const Timers = ({ day, year }: { day: string; year: string }) => {
   return (
     <>
       {timers.map((timer, i) => {
-        const stopTime = timer.stopTime ?? now;
-        const diff = new Date(stopTime.getTime() - timer.initTime.getTime());
+        const stopTime = timer.stopTime ?? new Date();
+        const diff = stopTime.getTime() - timer.initTime.getTime();
+        console.log(timer.stopTime, timer.initTime, diff);
 
-        return <Timer key={i} timer={diff} />;
+        return (
+          <Timer
+            key={i}
+            timer={
+              new Date(
+                new Date(diff).toLocaleString("en-us", { timeZone: "UTC" })
+              )
+            }
+          />
+        );
       })}
     </>
   );
 };
 
 const Timer = ({ timer }: { timer: Date }) => {
+  const days = Math.floor(timer.getTime() / 1000 / 60 / 60 / 24);
   return (
-    <span className="countdown rounded-xl bg-base-300 p-2 font-mono text-xl">
-      <span style={{ "--value": timer.getHours() } as CSSProperties}></span>:
-      <span style={{ "--value": timer.getMinutes() } as CSSProperties}></span>:
-      <span style={{ "--value": timer.getSeconds() } as CSSProperties}></span>
+    <span className="countdown rounded-xl bg-base-300 p-1.5 font-mono text-lg">
+      {days > 0 && (
+        <>
+          <span style={{ "--value": days } as CSSProperties} />:
+        </>
+      )}
+      <span style={{ "--value": timer.getHours() } as CSSProperties} />:
+      <span style={{ "--value": timer.getMinutes() } as CSSProperties} />:
+      <span style={{ "--value": timer.getSeconds() } as CSSProperties} />
     </span>
   );
 };
