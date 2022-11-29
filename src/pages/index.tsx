@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { FaCheckCircle, FaGithub } from "react-icons/fa";
 import { Layout } from "../components/Layout";
+import { newUTCDate } from "../components/Navbar";
 import { useLocalStorage } from "../utils/localStorage";
 import type { NextPageWithLayout } from "./_app";
 
@@ -27,7 +28,10 @@ const Home: NextPageWithLayout = () => {
     return unhexlify.startsWith("Salted__");
   })();
 
-  const now = new Date();
+  // puzzles unlock at UTC-5
+  const now = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "America/New_York" })
+  );
 
   return (
     <main className="h-full">

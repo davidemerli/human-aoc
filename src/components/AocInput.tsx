@@ -1,25 +1,43 @@
-import classNames from "classnames";
 import { useState } from "react";
 import { FaCopy } from "react-icons/fa";
-import { useAocInput } from "../utils/aocData";
+import { toast } from "react-toastify";
+import { useAocInput, useAocText, useAocTimers } from "../utils/aocData";
+import { useLocalStorage } from "../utils/localStorage";
+import { trpc } from "../utils/trpc";
+import { AocStyle } from "./AocText";
 
 export const AocInput = ({ year, day }: { year: string; day: string }) => {
-  const { data: text, isLoading, isError } = useAocInput({ year, day });
+  const {
+    data: text,
+    isLoading: isLoadingInput,
+    isError: isErrorInput,
+  } = useAocInput({ year, day });
 
-  const [showMessage, setShowMessage] = useState(false);
+  const {
+    data,
+    isLoading: isLoadingStars,
+    isError: isErrorStars,
+    refetch,
+  } = useAocText({ year, day });
 
-  if (isLoading) {
+  const submitAnswer = trpc.aoc.answer.useMutation();
+  const { refetch: refetchTimers } = useAocTimers({ year, day });
+
+  const [answer, setAnswer] = useState("");
+  const [cookie] = useLocalStorage("aocCookie", "");
+
+  if (isLoadingInput || isLoadingStars) {
     return <div>Loading...</div>;
   }
 
-  if (isError || !text) {
+  if (isErrorInput || isErrorStars || !text) {
     return <div>Error</div>;
   }
 
   const lines = text.split("\n");
 
   return (
-    <div className="relative flex h-full w-full flex-col rounded-xl bg-base-300 p-4 lg:max-w-lg">
+    <div className="relative flex h-full w-full flex-col gap-2 rounded-xl bg-base-300 p-4 lg:max-w-lg">
       <pre className="flex-grow overflow-y-scroll whitespace-pre-wrap font-mono">
         {text}
       </pre>
@@ -42,25 +60,88 @@ export const AocInput = ({ year, day }: { year: string; day: string }) => {
           <button
             className="btn-ghost btn-md btn-circle btn"
             onClick={() => {
-              navigator.clipboard.writeText(text);
-              setShowMessage(true);
-              setTimeout(() => setShowMessage(false), 2000);
+              navigator.clipboard
+                .writeText(text)
+                .then(() => toast("Copied to clipboard", { type: "success" }))
+                .catch(() =>
+                  toast("Failed to copy to clipboard", { type: "error" })
+                );
             }}
           >
             <FaCopy />
           </button>
         </div>
       </div>
-      <div
-        className={classNames("toast select-none transition-all duration-200", {
-          "translate-x-0": showMessage,
-          "translate-x-full": !showMessage,
-        })}
-      >
-        <div className="alert alert-success">
-          <div>
-            <span>Input copied successfully to clipboard</span>
-            <FaCopy className="ml-2" />
+      {data?.stars !== 2 && (
+        <div className="form-control w-full">
+          <label className="input-group">
+            <input
+              type="text"
+              className="input-bordered input w-full"
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+            />
+            <label
+              className="btn-primary btn border border-base-100"
+              htmlFor="my-modal"
+            >
+              submit answer
+            </label>
+          </label>
+        </div>
+      )}
+      <input type="checkbox" id="my-modal" className="modal-toggle" />
+      <div className="modal">
+        <div className="modal-box">
+          <h3 className="text-lg font-bold">
+            Do you really want to submit this answer?
+          </h3>
+          <p className="py-4">
+            <pre className="rounded-xl bg-base-300 p-4">{answer}</pre>
+          </p>
+          <div className="modal-action">
+            <label htmlFor="my-modal" className="btn-ghost btn">
+              cancel
+            </label>
+            <label
+              htmlFor="my-modal"
+              className="btn-primary btn"
+              onClick={() => {
+                console.log("submit", {
+                  year,
+                  day,
+                  answer,
+                  cookie,
+                  star: data?.stars,
+                });
+                submitAnswer
+                  .mutateAsync({
+                    year,
+                    day,
+                    answer,
+                    star: data?.stars === 1 ? 2 : 1,
+                    cookie,
+                  })
+                  .then((res) => {
+                    refetch();
+                    refetchTimers();
+                    toast(
+                      <AocStyle
+                        dangerouslySetInnerHTML={{ __html: res.message }}
+                      />,
+                      {
+                        type: res.correct
+                          ? "success"
+                          : res.incorrect
+                          ? "error"
+                          : "warning",
+                      }
+                    );
+                  });
+              }}
+            >
+              submit
+            </label>
           </div>
         </div>
       </div>

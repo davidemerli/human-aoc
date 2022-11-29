@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { newUTCDate } from "../../../components/Navbar";
 
 import { router, publicProcedure, protectedProcedure } from "../trpc";
 
@@ -23,15 +24,14 @@ export const aocRouter = router({
         },
       })
         .then((res) => res.text())
-        .then(
-          (text) =>
-            text
-              .substring(
-                text.indexOf("<main>"),
-                text.indexOf("</main>") + "</main>".length
-              )
-              //remove answer input form
-              .replace(/<form.*<\/form>/, "")
+        .then((text) =>
+          text
+            .substring(
+              text.indexOf("<main>"),
+              text.indexOf("</main>") + "</main>".length
+            )
+            //remove answer input form
+            .replace(/<form.*<\/form>/, "")
         )
         .then((text) => ({
           text,
@@ -43,8 +43,6 @@ export const aocRouter = router({
           throw new Error("Could not fetch text", err);
         });
 
-      if (info.stars === 2) return info;
-
       // find if there is a timer for this day and star
       // NB: we need to check for `info.stars + 1` since we get the number of
       // solved stars with the regex pattern above
@@ -54,17 +52,15 @@ export const aocRouter = router({
         },
       });
 
-      console.log(timer);
-
       // if there is no timer, create one
-      if (!timer) {
+      if (!timer && info.stars < 2) {
         await ctx.prisma.timer.create({
           data: { userId, day, year, star: info.stars + 1 },
         });
         // if there was a timer but it was not completed, update it to completed
         // NB: this happens when the user fetches the text after having solved one of the parts
         // i.e. after submitting an answer
-      } else if (timer.star === info.stars + 1) {
+      } else {
         await ctx.prisma.timer.updateMany({
           where: {
             userId,
@@ -73,7 +69,7 @@ export const aocRouter = router({
             star: info.stars,
             stopTime: null,
           },
-          data: { stopTime: new Date() },
+          data: { stopTime: newUTCDate() },
         });
       }
 
@@ -123,8 +119,8 @@ export const aocRouter = router({
   answer: protectedProcedure
     .input(
       z.object({
-        day: z.number(),
-        year: z.number(),
+        day: z.string().transform((v) => parseInt(v)),
+        year: z.string().transform((v) => parseInt(v)),
         star: z.number(),
         answer: z.string(),
         cookie: z.string(),
@@ -132,6 +128,8 @@ export const aocRouter = router({
     )
     .mutation(async ({ input }) => {
       const { day, year, star, answer, cookie } = input;
+
+      console.log(input);
 
       const response = await fetch(
         `https://adventofcode.com/${year}/day/${day}/answer`,
@@ -143,14 +141,23 @@ export const aocRouter = router({
           },
           body: `level=${star}&answer=${answer}`,
         }
-      );
+      )
+        .then((res) => res.text())
+        .then((res) => {
+          // parse response and get <article> element
+          const article = res
+            .substring(res.indexOf("<article>"), res.indexOf("</article>"))
+            .replace(/<article>/, "");
 
-      const text = await response.text();
+          // if the response contains the "That's the right answer" string, the answer was correct
+          const correct = article.includes("That's the right answer");
+          // if the response contains the "That's not the right answer" string, the answer was incorrect
+          const incorrect = article.includes("That's not the right answer");
+          // if the response contains the "You gave an answer too recently" string, the answer was too soon
 
-      const regex = /That's the right answer!/g;
+          return { correct, incorrect, message: article };
+        });
 
-      const count = text.match(regex)?.length ?? 0;
-
-      return count === 1;
+      return response;
     }),
 });

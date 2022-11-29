@@ -4,8 +4,9 @@ import { useRouter } from "next/router";
 import { trpc } from "../utils/trpc";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { CSSProperties } from "styled-components";
+import { useAocTimers } from "../utils/aocData";
 import { useLocalStorage } from "../utils/localStorage";
 
 export const Navbar = () => {
@@ -113,29 +114,30 @@ const ProgressDisplay = ({ year, day }: { year: string; day: string }) => {
   );
 };
 
-const Timers = ({ day, year }: { day: string; year: string }) => {
-  const newDate = useCallback(
-    () => new Date(new Date().toLocaleString("en-US", { timeZone: "UTC" })),
-    []
-  );
+export const newUTCDate = () =>
+  new Date(new Date().toLocaleString("en-US", { timeZone: "UTC" }));
 
-  const [now, setNow] = useState(newDate());
+//TODO: fix timer not visually updating correctly when correct solution is submitted
+const Timers = ({ day, year }: { day: string; year: string }) => {
+  const [now, setNow] = useState(newUTCDate());
   const {
     data: timers,
     isLoading,
     isError,
-  } = trpc.aoc.timers.useQuery({
-    day: day as string,
-    year: year as string,
-  });
+  } = trpc.aoc.timers.useQuery(
+    { day, year },
+    {
+      onSuccess: () => setNow(newUTCDate()),
+    }
+  );
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setNow(newDate());
+      setNow(newUTCDate());
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [newDate]);
+  }, [timers]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -148,20 +150,10 @@ const Timers = ({ day, year }: { day: string; year: string }) => {
   return (
     <>
       {timers.map((timer, i) => {
-        const stopTime = timer.stopTime ?? new Date();
+        const stopTime = timer.stopTime ?? now;
         const diff = stopTime.getTime() - timer.initTime.getTime();
-        console.log(timer.stopTime, timer.initTime, diff);
 
-        return (
-          <Timer
-            key={i}
-            timer={
-              new Date(
-                new Date(diff).toLocaleString("en-us", { timeZone: "UTC" })
-              )
-            }
-          />
-        );
+        return <Timer key={i} timer={new Date(diff)} />;
       })}
     </>
   );
@@ -170,7 +162,7 @@ const Timers = ({ day, year }: { day: string; year: string }) => {
 const Timer = ({ timer }: { timer: Date }) => {
   const days = Math.floor(timer.getTime() / 1000 / 60 / 60 / 24);
   return (
-    <span className="countdown rounded-xl bg-base-300 p-1.5 font-mono text-lg">
+    <span className="countdown rounded-xl bg-base-300 p-2 font-mono">
       {days > 0 && (
         <>
           <span style={{ "--value": days } as CSSProperties} />:

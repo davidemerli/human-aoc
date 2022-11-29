@@ -9,6 +9,9 @@ import "../styles/globals.css";
 import type { ReactElement, ReactNode } from "react";
 import type { NextPage } from "next";
 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 export type NextPageWithLayout<P = unknown, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
 };
@@ -26,6 +29,10 @@ const MyApp: AppType<{ session: Session | null }> = ({
   return (
     <SessionProvider session={session}>
       {getLayout(<Component {...pageProps} />)}
+      <ToastContainer
+        theme="dark"
+        toastClassName="bg-base-300 top-12 text-base-content text-base-content min-w-fit"
+      />
     </SessionProvider>
   );
 };

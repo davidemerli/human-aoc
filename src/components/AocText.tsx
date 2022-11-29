@@ -13,14 +13,14 @@ export const AocText = ({ year, day }: { year: string; day: string }) => {
   }
 
   return (
-    <AoC
+    <AocStyle
       className="h-full w-full overflow-scroll"
       dangerouslySetInnerHTML={{ __html: problemInfo.text }}
     />
   );
 };
 
-const AoC = styled.div`
+export const AocStyle = styled.div`
   font-family: "Roboto Mono", monospace;
 
   h2 {

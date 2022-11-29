@@ -1,6 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import { useMemo } from "react";
 import { useLocalStorage } from "./localStorage";
 import { trpc } from "./trpc";
 
@@ -13,6 +10,8 @@ export const useAocText = ({ year, day }: { year: string; day: string }) => {
       isLoading: false,
       isError: true,
       error: new Error("No cookie"),
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      refetch: () => {},
     };
   }
 
@@ -45,4 +44,8 @@ export const useAocInput = ({ year, day }: { year: string; day: string }) => {
       cacheTime: 1000 * 60 * 60 * 24, // 1 day
     }
   );
+};
+
+export const useAocTimers = ({ year, day }: { year: string; day: string }) => {
+  return trpc.aoc.timers.useQuery({ year, day });
 };
