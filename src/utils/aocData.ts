@@ -1,36 +1,48 @@
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import { useMemo } from "react";
 import { useLocalStorage } from "./localStorage";
 import { trpc } from "./trpc";
 
-export function useAoCData(day: number, year: number) {
-  const [aocCookie] = useLocalStorage<string>("aocCookie", "");
+export const useAocText = ({ year, day }: { year: string; day: string }) => {
+  const [cookie] = useLocalStorage<string | null>("aocCookie", null);
 
-  const aocText = trpc.example.getAocText.useQuery({
-    day,
-    year,
-    cookie: aocCookie,
-  });
+  if (!cookie) {
+    return {
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error("No cookie"),
+    };
+  }
 
-  const aocData = trpc.example.getAoc.useQuery({
-    day,
-    year,
-    cookie: aocCookie,
-  });
+  return trpc.aoc.text.useQuery(
+    { year, day, cookie },
+    {
+      // enabled: !!cookie, TODO: check
+      refetchOnWindowFocus: false,
+      cacheTime: 1000 * 60 * 60 * 24, // 1 day
+    }
+  );
+};
 
-  const puzzleAnswers = useMemo(() => {
-    if (!aocText.data) return [];
+export const useAocInput = ({ year, day }: { year: string; day: string }) => {
+  const [cookie] = useLocalStorage<string | null>("aocCookie", null);
 
-    const regex = /<p>Your puzzle answer was <code>(\d+)<\/code>/g;
+  if (!cookie) {
+    return {
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error("No cookie"),
+    };
+  }
 
-    const matches = [...aocText.data.matchAll(regex)];
-
-    return matches.map((match) => match[1]);
-  }, [aocText.data]);
-
-  return {
-    aocText: aocText.data,
-    aocData: aocData.data,
-    puzzleAnswers,
-    aocCookie,
-  } as const;
-}
+  return trpc.aoc.input.useQuery(
+    { year, day, cookie },
+    {
+      refetchOnWindowFocus: false,
+      cacheTime: 1000 * 60 * 60 * 24, // 1 day
+    }
+  );
+};

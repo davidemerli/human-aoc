@@ -2,85 +2,81 @@ import { z } from "zod";
 
 import { router, publicProcedure, protectedProcedure } from "../trpc";
 
-export const exampleRouter = router({
-  hello: publicProcedure
-    .input(z.object({ text: z.string().nullish() }).nullish())
-    .query(({ input }) => {
-      return {
-        greeting: `Hello ${input?.text ?? "world"}`,
-      };
-    }),
-  getAll: publicProcedure.query(({ ctx }) => {
-    return ctx.prisma.example.findMany();
-  }),
-  getAocText: protectedProcedure
-    .input(z.object({ day: z.number(), year: z.number(), cookie: z.string() }))
+export const aocRouter = router({
+  text: protectedProcedure
+    .input(
+      z.object({
+        day: z.string().transform((val) => parseInt(val)),
+        year: z.string().transform((val) => parseInt(val)),
+        cookie: z.string(),
+      })
+    )
     .query(async ({ input, ctx }) => {
       const { day, year, cookie } = input;
       const {
         user: { id: userId },
       } = ctx.session;
 
-      const text = await fetch(`https://adventofcode.com/${year}/day/${day}`, {
+      const info = await fetch(`https://adventofcode.com/${year}/day/${day}`, {
         headers: {
           cookie: `session=${cookie}`,
         },
       })
         .then((res) => res.text())
-        .then((text) => {
-          const main = text.substring(
+        .then((text) =>
+          text.substring(
             text.indexOf("<main>"),
             text.indexOf("</main>") + "</main>".length
-          );
-          return main;
+          )
+        )
+        .then((text) => ({
+          text,
+          stars:
+            text.match(/<p>Your puzzle answer was <code>(\d+)<\/code>/g)
+              ?.length ?? 0,
+        }))
+        .catch((err) => {
+          throw new Error("Could not fetch text", err);
         });
 
-      // count Your puzzle answer is: in text
-      const regex = /<p>Your puzzle answer was <code>(\d+)<\/code>/g;
-      const count = text.match(regex)?.length ?? 0;
+      if (info.stars === 2) return info;
 
-      if (count === 2) return text;
-
+      // find if there is a timer for this day and star
+      // NB: we need to check for `info.stars + 1` since we get the number of
+      // solved stars with the regex pattern above
       const timer = await ctx.prisma.timer.findUnique({
         where: {
-          userId_day_year_star: {
-            userId,
-            day,
-            year,
-            star: count,
-          },
+          userId_day_year_star: { userId, day, year, star: info.stars + 1 },
         },
       });
 
+      // if there is no timer, create one
       if (!timer) {
         await ctx.prisma.timer.create({
-          data: {
-            userId,
-            day,
-            year,
-            star: count + 1,
-          },
+          data: { userId, day, year, star: info.stars + 1 },
         });
-      } else if (!timer.stopTime) {
+        // if there was a timer but it was not completed, update it to completed
+        // NB: this happens when the user fetches the text after having solved one of the parts
+        // i.e. after submitting an answer
+      } else if (!timer.stopTime && timer.star === info.stars) {
         await ctx.prisma.timer.update({
           where: {
-            userId_day_year_star: {
-              userId,
-              day,
-              year,
-              star: count,
-            },
+            userId_day_year_star: { userId, day, year, star: info.stars },
           },
-          data: {
-            stopTime: new Date(),
-          },
+          data: { stopTime: new Date() },
         });
       }
 
-      return text;
+      return info;
     }),
-  getAoc: publicProcedure
-    .input(z.object({ day: z.number(), year: z.number(), cookie: z.string() }))
+  input: publicProcedure
+    .input(
+      z.object({
+        day: z.string().transform((val) => parseInt(val)),
+        year: z.string().transform((val) => parseInt(val)),
+        cookie: z.string(),
+      })
+    )
     .query(({ input }) => {
       const { day, year, cookie } = input;
 
@@ -90,8 +86,13 @@ export const exampleRouter = router({
         },
       }).then((res) => res.text());
     }),
-  getTimers: protectedProcedure
-    .input(z.object({ day: z.number(), year: z.number() }))
+  timers: protectedProcedure
+    .input(
+      z.object({
+        day: z.string().transform((v) => parseInt(v)),
+        year: z.string().transform((v) => parseInt(v)),
+      })
+    )
     .query(async ({ input, ctx }) => {
       const {
         user: { id: userId },
@@ -109,7 +110,7 @@ export const exampleRouter = router({
 
       return timers;
     }),
-  submitAnswer: protectedProcedure
+  answer: protectedProcedure
     .input(
       z.object({
         day: z.number(),

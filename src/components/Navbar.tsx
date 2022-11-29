@@ -1,101 +1,38 @@
 import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useAoCData } from "../utils/aocData";
-import { useLocalStorage } from "../utils/localStorage";
 import { trpc } from "../utils/trpc";
 
-import { subSeconds, format } from "date-fns";
-import { useState } from "react";
-import { date } from "zod";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import type { CSSProperties } from "styled-components";
+import { useLocalStorage } from "../utils/localStorage";
 
 export const Navbar = () => {
   const { data: session } = useSession();
   const router = useRouter();
-  const { day, year } = router.query;
+  const { day, year } = router.query as {
+    day: string | undefined;
+    year: string | undefined;
+  };
 
-  const [aocCookie, setAocCookie] = useLocalStorage("aocCookie", "");
-  const { puzzleAnswers } = useAoCData(Number(day), Number(year));
-
-  const [timer, setTimer] = useState<Date | null>(null);
-
-  const timers = trpc.example.getTimers.useQuery(
-    {
-      day: Number(day),
-      year: Number(year),
-    },
-    {
-      onSuccess: (data) => {
-        if (data) {
-          const currentTimer = data.find((timer) => timer.stopTime === null);
-
-          if (!currentTimer) return;
-
-          // set recurring timer of 1 second
-          const timer = setInterval(() => {
-            // diff between now and currentTimer.initTime
-            setTimer(new Date(Date.now() - currentTimer.initTime.getTime()));
-          }, 1000);
-
-          // clear timer when component unmounts
-          return () => clearInterval(timer);
-        }
-      },
-    }
-  );
+  const [cookie, setCookie] = useLocalStorage("aocCookie", "");
 
   return (
     <div className="navbar bg-base-100 px-4">
       <div className="navbar-start">
-        <div
-          className="text-2xl"
+        <Link
+          className="btn-ghost btn text-2xl font-bold normal-case"
+          href="/"
           style={{
-            color: "#00cc00",
-            textShadow: "0 0 6px #00cc00",
+            color: "#00ff00",
+            textShadow: "0 0 4px #00cc00",
           }}
         >
           hAOC
-        </div>
+        </Link>
       </div>
-      <div className="navbar-center relative">
-        {year && day && (
-          <>
-            <a className="text-xl normal-case">
-              {year} Day {day}
-            </a>
-            <div className="mt-2.5 ml-2">
-              {new Array(puzzleAnswers.length).fill(0).map((_, i) => (
-                <span
-                  key={i}
-                  className="text-4xl text-yellow-200"
-                  style={{ textShadow: "0 0 4px" }}
-                >
-                  *
-                </span>
-              ))}
-              {new Array(2 - puzzleAnswers.length).fill(0).map((_, i) => (
-                <span key={i} className="text-4xl text-white text-opacity-20">
-                  *
-                </span>
-              ))}
-            </div>
-          </>
-        )}
-        <div className="mx-2 flex flex-row gap-2">
-          {timers.data
-            ?.filter((t) => t.stopTime !== null)
-            .map((timer, i) => (
-              <Timer
-                key={i}
-                timer={
-                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                  new Date(timer.stopTime!.getTime() - timer.initTime.getTime())
-                }
-              />
-            ))}
-          {timer && <Timer timer={timer} />}
-        </div>
-      </div>
+      {year && day && <ProgressDisplay year={year} day={day} />}
       <div className="navbar-end">
         <div className="dropdown-end dropdown">
           {session?.user && (
@@ -117,8 +54,8 @@ export const Navbar = () => {
                 type="text"
                 className="input input-sm w-full"
                 placeholder="Your AoC cookie"
-                value={aocCookie}
-                onChange={(e) => setAocCookie(e.target.value)}
+                value={cookie}
+                onChange={(e) => setCookie(e.target.value)}
               />
             </li>
             <li>
@@ -134,12 +71,101 @@ export const Navbar = () => {
   );
 };
 
+const ProgressDisplay = ({ year, day }: { year: string; day: string }) => {
+  const [cookie] = useLocalStorage("aocCookie", "");
+
+  const {
+    data: problemInfo,
+    isLoading,
+    isError,
+  } = trpc.aoc.text.useQuery({ day, year, cookie: cookie });
+
+  if (isLoading) return <div>Loading...</div>;
+  if (isError) return <div>Error</div>;
+
+  return (
+    <div className="navbar-center relative">
+      <>
+        <a className="text-xl normal-case">
+          {year} Day {day}
+        </a>
+        <div className="mt-2.5 ml-2">
+          {new Array(problemInfo.stars).fill(0).map((_, i) => (
+            <span
+              key={i}
+              className="text-4xl text-yellow-200"
+              style={{ textShadow: "0 0 4px" }}
+            >
+              *
+            </span>
+          ))}
+          {new Array(2 - problemInfo.stars).fill(0).map((_, i) => (
+            <span key={i} className="text-4xl text-white text-opacity-20">
+              *
+            </span>
+          ))}
+        </div>
+      </>
+      <div className="mx-2 flex flex-row gap-2">
+        <Timers year={year} day={day} />
+      </div>
+    </div>
+  );
+};
+
+const Timers = ({ day, year }: { day: string; year: string }) => {
+  const newDate = useCallback(
+    () =>
+      new Date(
+        new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000
+      ),
+    []
+  );
+
+  const [now, setNow] = useState(newDate());
+  const {
+    data: timers,
+    isLoading,
+    isError,
+  } = trpc.aoc.timers.useQuery({
+    day: day as string,
+    year: year as string,
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(newDate());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [newDate]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (isError) {
+    return <div>Error</div>;
+  }
+
+  return (
+    <>
+      {timers.map((timer, i) => {
+        const stopTime = timer.stopTime ?? now;
+        const diff = new Date(stopTime.getTime() - timer.initTime.getTime());
+
+        return <Timer key={i} timer={diff} />;
+      })}
+    </>
+  );
+};
+
 const Timer = ({ timer }: { timer: Date }) => {
   return (
     <span className="countdown rounded-xl bg-base-300 p-2 font-mono text-xl">
-      <span style={{ "--value": timer.getHours() }}></span>:
-      <span style={{ "--value": timer.getMinutes() }}></span>:
-      <span style={{ "--value": timer.getSeconds() }}></span>
+      <span style={{ "--value": timer.getHours() } as CSSProperties}></span>:
+      <span style={{ "--value": timer.getMinutes() } as CSSProperties}></span>:
+      <span style={{ "--value": timer.getSeconds() } as CSSProperties}></span>
     </span>
   );
 };

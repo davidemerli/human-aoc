@@ -1,62 +1,57 @@
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import classNames from "classnames";
 import { useRouter } from "next/router";
 import { useState } from "react";
-import { FaChevronRight, FaCopy } from "react-icons/fa";
-import styled from "styled-components";
+import { FaChevronRight } from "react-icons/fa";
+import { AocInput } from "../../components/AocInput";
+import { AocText } from "../../components/AocText";
 import { Layout } from "../../components/Layout";
-import { useAoCData } from "../../utils/aocData";
+import { useLocalStorage } from "../../utils/localStorage";
+import useMediaQuery from "../../utils/mediaQuery";
 import { trpc } from "../../utils/trpc";
 import type { NextPageWithLayout } from "../_app";
 
+type Tabs = "input" | "text";
+
 const Home: NextPageWithLayout = () => {
   const router = useRouter();
-  const { day, year } = router.query;
+  const { day, year } = router.query as { day: string; year: string };
 
-  const { aocText, aocData, puzzleAnswers, aocCookie } = useAoCData(
-    Number(day),
-    Number(year)
+  const submitAnswer = trpc.aoc.answer.useMutation();
+  const [activeTab, setActiveTab] = useLocalStorage<Tabs>(
+    "aocActiveTab",
+    "text"
   );
 
-  const submitAnswer = trpc.example.submitAnswer.useMutation();
+  const lg = useMediaQuery("(min-width: 1024px)");
+
+  if (typeof window === "undefined") return null;
 
   return (
-    <main className="h-full overflow-scroll">
-      <div className="flex h-full w-full flex-row gap-4 overflow-scroll p-4">
-        {aocText && (
-          <AoC
-            className="max-w-4xl overflow-scroll"
-            dangerouslySetInnerHTML={{ __html: aocText }}
-          />
-        )}
-        <div className="flex h-full max-w-lg flex-col gap-2">
-          <SubmitAnswer
-            onSubmit={(answer) =>
-              submitAnswer.mutateAsync({
-                day: Number(day),
-                year: Number(year),
-                answer,
-                star: puzzleAnswers.length + 1,
-                cookie: aocCookie,
-              })
-            }
-          />
-
-          {aocData && (
-            <pre className="h-full w-full overflow-x-hidden overflow-y-scroll break-all rounded-xl bg-base-300 p-2">
-              {aocData}
-              <div className="absolute bottom-2 right-2 m-4">
-                <button
-                  className="btn-outline btn-sm btn"
-                  onClick={() => {
-                    navigator.clipboard.writeText(aocData);
-                  }}
-                >
-                  <FaCopy />
-                </button>
-              </div>
-            </pre>
-          )}
-        </div>
+    <main className="relative h-full overflow-scroll">
+      <div className="tabs absolute w-full rounded-sm rounded-t-xl bg-base-200 pt-1 lg:hidden">
+        {/* for every type in active tab */}
+        {["text", "input"].map((tab) => (
+          <button
+            key={tab}
+            className={classNames(
+              "tab tab-lifted flex-grow text-lg capitalize",
+              {
+                "tab-active": activeTab === tab,
+              }
+            )}
+            onClick={() => setActiveTab(tab as Tabs)}
+          >
+            {tab}
+          </button>
+        ))}
       </div>
+      <div className="flex h-full flex-row gap-4 overflow-scroll rounded-xl p-4 pt-16 lg:bg-base-100 lg:pt-4">
+        {/* tabs with daisyui */}
+        {(activeTab === "text" || lg) && <AocText year={year} day={day} />}
+        {(activeTab === "input" || lg) && <AocInput year={year} day={day} />}
+      </div>
+      <ReactQueryDevtools />
     </main>
   );
 };
@@ -86,97 +81,5 @@ const SubmitAnswer = ({ onSubmit }: { onSubmit: (answer: string) => void }) => {
 Home.getLayout = (page) => {
   return <Layout>{page}</Layout>;
 };
-
-const AoC = styled.div`
-  font-family: "Roboto Mono", monospace;
-
-  h2 {
-    color: #ffffff;
-    margin-top: 1em;
-    margin-bottom: 1em;
-    white-space: nowrap;
-  }
-
-  em {
-    color: #ffffff;
-    font-style: normal;
-    font-weight: bold;
-    text-shadow: 0 0 2px gray;
-  }
-
-  first-of-type {
-    margin-top: 0;
-  }
-
-  a {
-    white-space: nowrap;
-  }
-
-  em.star {
-    color: #ffff66;
-    font-style: normal;
-    text-shadow: 0 0 4px #ffff66;
-  }
-
-  pre,
-  code {
-    //avoid padding messing up the first line
-    padding: 0;
-    margin: 0;
-  }
-
-  pre {
-    font-family: "Roboto Mono", monospace;
-    letter-spacing: 0.1rem;
-    font-size: 1rem;
-    line-height: 1.55rem;
-    color: #ffffff66;
-    background-color: #1f1f1f;
-    border-radius: 0.5rem;
-    padding: 0.5rem;
-    overflow: scroll;
-  }
-
-  p {
-    margin: 1rem 0;
-  }
-
-  .share {
-    color: #009900;
-    cursor: default;
-    transition: color 0.2s 1s;
-    /*position: relative;*/
-  }
-
-  .share:hover,
-  .share:focus-within {
-    color: #aaffaa;
-    transition: color 0.2s 0s;
-  }
-
-  .share .share-content {
-    display: inline-block;
-    vertical-align: text-bottom;
-    white-space: nowrap;
-    overflow: hidden;
-    max-width: 0;
-    transition: max-width 0.2s 1s;
-  }
-
-  .share .share-content:before {
-    content: "\\00a0";
-  }
-
-  .share:hover .share-content,
-  .share:focus-within .share-content {
-    max-width: 45em;
-    transition: max-width 0.2s 0s;
-  }
-
-  .day-success {
-    color: #ffff66;
-    text-shadow: 0 0 6px #ffff66;
-  }
-`;
 
 export default Home;
