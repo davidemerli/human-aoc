@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { newUTCDate } from "../../../components/Navbar";
 
 import { router, publicProcedure, protectedProcedure } from "../trpc";
 
@@ -43,35 +42,37 @@ export const aocRouter = router({
           throw new Error("Could not fetch text", err);
         });
 
-      // find if there is a timer for this day and star
-      // NB: we need to check for `info.stars + 1` since we get the number of
-      // solved stars with the regex pattern above
-      const timer = await ctx.prisma.timer.findUnique({
-        where: {
-          userId_day_year_star: { userId, day, year, star: info.stars + 1 },
-        },
-      });
-
-      // if there is no timer, create one
-      if (!timer && info.stars < 2) {
-        await ctx.prisma.timer.create({
-          data: { userId, day, year, star: info.stars + 1 },
-        });
-        // if there was a timer but it was not completed, update it to completed
-        // NB: this happens when the user fetches the text after having solved one of the parts
-        // i.e. after submitting an answer
-      } else {
-        await ctx.prisma.timer.updateMany({
+      if (info.stars < 2) {
+        // find if there is a timer for this day and star
+        // NB: we need to check for `info.stars + 1` since we get the number of
+        // solved stars with the regex pattern above
+        const timer = await ctx.prisma.timer.findUnique({
           where: {
-            userId,
-            day,
-            year,
-            star: info.stars,
-            stopTime: null,
+            userId_day_year_star: { userId, day, year, star: info.stars + 1 },
           },
-          data: { stopTime: newUTCDate() },
         });
+
+        // if there is no timer, create one
+        if (!timer) {
+          await ctx.prisma.timer.create({
+            data: { userId, day, year, star: info.stars + 1 },
+          });
+        }
       }
+
+      // if there was a timer but it was not completed, update it to completed
+      // NB: this happens when the user fetches the text after having solved one of the parts
+      // i.e. after submitting an answer
+      await ctx.prisma.timer.updateMany({
+        where: {
+          userId,
+          day,
+          year,
+          star: info.stars,
+          stopTime: null,
+        },
+        data: { stopTime: new Date() },
+      });
 
       return info;
     }),

@@ -6,7 +6,6 @@ import { trpc } from "../utils/trpc";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "styled-components";
-import { useAocTimers } from "../utils/aocData";
 import { useLocalStorage } from "../utils/localStorage";
 
 export const Navbar = () => {
@@ -33,7 +32,9 @@ export const Navbar = () => {
           hAOC
         </Link>
       </div>
-      {year && day && <ProgressDisplay year={year} day={day} />}
+      {router.pathname === "/[year]/[day]" && year && day && (
+        <ProgressDisplay year={year} day={day} />
+      )}
       <div className="navbar-end">
         <div className="dropdown-end dropdown">
           {session?.user && (
@@ -114,8 +115,9 @@ const ProgressDisplay = ({ year, day }: { year: string; day: string }) => {
   );
 };
 
-export const newUTCDate = () =>
-  new Date(new Date().toLocaleString("en-US", { timeZone: "UTC" }));
+export const newUTCDate = (date = new Date()) => {
+  return new Date(date.toLocaleString("en-US", { timeZone: "UTC" }));
+};
 
 //TODO: fix timer not visually updating correctly when correct solution is submitted
 const Timers = ({ day, year }: { day: string; year: string }) => {
@@ -150,17 +152,42 @@ const Timers = ({ day, year }: { day: string; year: string }) => {
   return (
     <>
       {timers.map((timer, i) => {
-        const stopTime = timer.stopTime ?? now;
-        const diff = stopTime.getTime() - timer.initTime.getTime();
+        const stopTime = timer.stopTime ? newUTCDate(timer.stopTime) : now;
+        const diff = Math.max(
+          0,
+          stopTime.getTime() - newUTCDate(timer.initTime).getTime()
+        );
 
-        return <Timer key={i} timer={new Date(diff)} />;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((diff / 1000 / 60) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+
+        return (
+          <Timer
+            key={i}
+            days={days}
+            hours={hours}
+            minutes={minutes}
+            seconds={seconds}
+          />
+        );
       })}
     </>
   );
 };
 
-const Timer = ({ timer }: { timer: Date }) => {
-  const days = Math.floor(timer.getTime() / 1000 / 60 / 60 / 24);
+const Timer = ({
+  days,
+  hours,
+  minutes,
+  seconds,
+}: {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+}) => {
   return (
     <span className="countdown rounded-xl bg-base-300 p-2 font-mono">
       {days > 0 && (
@@ -168,9 +195,9 @@ const Timer = ({ timer }: { timer: Date }) => {
           <span style={{ "--value": days } as CSSProperties} />:
         </>
       )}
-      <span style={{ "--value": timer.getHours() } as CSSProperties} />:
-      <span style={{ "--value": timer.getMinutes() } as CSSProperties} />:
-      <span style={{ "--value": timer.getSeconds() } as CSSProperties} />
+      <span style={{ "--value": hours } as CSSProperties} />:
+      <span style={{ "--value": minutes } as CSSProperties} />:
+      <span style={{ "--value": seconds } as CSSProperties} />
     </span>
   );
 };
