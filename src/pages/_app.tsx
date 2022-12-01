@@ -28,7 +28,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
 
   return (
     <SessionProvider session={session}>
-      {getLayout(<Component {...pageProps} />)}
+      <div data-theme="dark">{getLayout(<Component {...pageProps} />)}</div>
       <ToastContainer
         theme="dark"
         toastClassName="bg-base-300 top-12 text-base-content text-base-content min-w-fit"
