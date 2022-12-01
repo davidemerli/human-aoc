@@ -17,7 +17,6 @@ const Home: NextPageWithLayout = () => {
   const router = useRouter();
   const { day, year } = router.query as { day: string; year: string };
 
-  const submitAnswer = trpc.aoc.answer.useMutation();
   const [activeTab, setActiveTab] = useLocalStorage<Tabs>(
     "aocActiveTab",
     "text"
@@ -53,28 +52,6 @@ const Home: NextPageWithLayout = () => {
       </div>
       <ReactQueryDevtools />
     </main>
-  );
-};
-
-const SubmitAnswer = ({ onSubmit }: { onSubmit: (answer: string) => void }) => {
-  const [answer, setAnswer] = useState("");
-
-  return (
-    <div className="form-control w-full">
-      <div className="input-group">
-        <input
-          type="text"
-          placeholder="Answer"
-          className="input w-full bg-base-200"
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-        />
-        <button className="btn-square btn" onClick={() => onSubmit(answer)}>
-          {/* TODO: show if correct through snackbar? */}
-          <FaChevronRight />
-        </button>
-      </div>
-    </div>
   );
 };
 
