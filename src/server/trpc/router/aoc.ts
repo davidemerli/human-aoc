@@ -38,6 +38,12 @@ export const aocRouter = router({
             text.match(/<p>Your puzzle answer was <code>(\d+)<\/code>/g)
               ?.length ?? 0,
         }))
+        .then((info) => {
+          if (info.text === "Please")
+            throw new Error("Puzzle not unlocked yet");
+
+          return info;
+        })
         .catch((err) => {
           throw new Error("Could not fetch text", err);
         });
