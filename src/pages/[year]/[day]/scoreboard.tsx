@@ -32,6 +32,7 @@ const ScoreboardDay: NextPageWithLayout = () => {
         <h1 className="mb-4 text-center text-4xl">Star 1</h1>
         {timers
           .filter((timer) => timer.star === 1)
+          .sort((a, b) => a.duration - b.duration)
           .map((timer, i) => {
             return <TimeCard key={timer.userId} timer={timer} rank={i} />;
           })}
@@ -40,6 +41,7 @@ const ScoreboardDay: NextPageWithLayout = () => {
         <h1 className="mb-4 text-center text-4xl">Star 2</h1>
         {timers
           .filter((timer) => timer.star === 2)
+          .sort((a, b) => a.duration - b.duration)
           .map((timer, i) => {
             return <TimeCard key={timer.userId} timer={timer} rank={i} />;
           })}
