@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "styled-components";
 import { useLocalStorage } from "../utils/localStorage";
+import { FaChartBar, FaChartLine, FaRegChartBar } from "react-icons/fa";
 
 export const Navbar = () => {
   const { data: session } = useSession();
@@ -32,9 +33,21 @@ export const Navbar = () => {
           hAOC
         </Link>
       </div>
-      {router.pathname === "/[year]/[day]" && year && day && (
-        <ProgressDisplay year={year} day={day} />
-      )}
+      <div className="navbar-center relative flex flex-row gap-2 md:flex-row">
+        {router.pathname.startsWith("/[year]/[day]") && year && day && (
+          <>
+            {!router.pathname.includes("scoreboard") && (
+              <button
+                className="btn-ghost btn-circle btn"
+                onClick={() => router.push(`/${year}/${day}/scoreboard`)}
+              >
+                <FaChartBar className="h-6 w-6" />
+              </button>
+            )}
+            <ProgressDisplay year={year} day={day} />
+          </>
+        )}
+      </div>
       <div className="navbar-end">
         <div className="dropdown-end dropdown">
           {session?.user && (
@@ -86,7 +99,7 @@ const ProgressDisplay = ({ year, day }: { year: string; day: string }) => {
   if (isError) return <div>Error</div>;
 
   return (
-    <div className="navbar-center relative flex flex-col md:flex-row">
+    <>
       <div className="flex flex-row items-center">
         <a className="text-xl normal-case">
           {year} Day {day}
@@ -111,7 +124,7 @@ const ProgressDisplay = ({ year, day }: { year: string; day: string }) => {
       <div className="mx-2 flex flex-row gap-2">
         <Timers year={year} day={day} />
       </div>
-    </div>
+    </>
   );
 };
 
