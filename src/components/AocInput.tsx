@@ -17,7 +17,7 @@ export const AocInput = ({ year, day }: { year: string; day: string }) => {
     data,
     isLoading: isLoadingStars,
     isError: isErrorStars,
-    refetch,
+    refetch: refetchText,
   } = useAocText({ year, day });
 
   const submitAnswer = trpc.aoc.answer.useMutation();
@@ -123,8 +123,7 @@ export const AocInput = ({ year, day }: { year: string; day: string }) => {
                     cookie,
                   })
                   .then((res) => {
-                    refetch();
-                    refetchTimers();
+                    refetchText?.().then(() => refetchTimers());
                     toast(
                       <AocStyle
                         dangerouslySetInnerHTML={{ __html: res.message }}

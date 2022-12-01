@@ -11,7 +11,7 @@ export const useAocText = ({ year, day }: { year: string; day: string }) => {
       isError: true,
       error: new Error("No cookie"),
       // eslint-disable-next-line @typescript-eslint/no-empty-function
-      refetch: () => {},
+      refetch: null,
     };
   }
 
