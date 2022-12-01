@@ -20,6 +20,9 @@ export const scoringRouter = router({
             not: null,
           },
         },
+        include: {
+          user: true,
+        },
       });
 
       return timers.map((timer) => {
