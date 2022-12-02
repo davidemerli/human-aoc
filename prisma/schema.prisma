@@ -53,6 +53,7 @@ model User {
   Timer         Timer[]
   CodeSolution  CodeSolution[]
   Comment       Comment[]
+  Like          Like[]
 }
 
 model VerificationToken {
@@ -77,17 +78,18 @@ model Timer {
 }
 
 model CodeSolution {
-  id        String    @id @default(cuid())
-  code      String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  star      Int
-  day       Int
-  year      Int
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  likes     Int       @default(0)
-  Comment   Comment[]
+  id          String    @id @default(cuid())
+  code        String
+  description String?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  star        Int
+  day         Int
+  year        Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  comments    Comment[]
+  likes       Like[]
 
   @@unique([userId, day, year, star])
 }
@@ -102,4 +104,16 @@ model Comment {
 
   codeSolution   CodeSolution @relation(fields: [codeSolutionId], references: [id], onDelete: Cascade)
   codeSolutionId String
+}
+
+model Like {
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  codeSolution   CodeSolution @relation(fields: [codeSolutionId], references: [id])
+  user           User         @relation(fields: [userId], references: [id])
+  codeSolutionId String
+  userId         String
+
+  @@unique([codeSolutionId, userId])
 }

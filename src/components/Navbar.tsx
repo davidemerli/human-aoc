@@ -5,45 +5,110 @@ import { trpc } from "../utils/trpc";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import {
+  FaBars,
+  FaChartBar,
+  FaCode,
+  FaFileCode,
+  FaHamburger,
+  FaReadme,
+} from "react-icons/fa";
 import type { CSSProperties } from "styled-components";
 import { useLocalStorage } from "../utils/localStorage";
-import { FaChartBar, FaChartLine, FaRegChartBar } from "react-icons/fa";
+
+const CenterButtons = ({ year, day }: { year: string; day: string }) => {
+  const router = useRouter();
+
+  return (
+    <>
+      {router.pathname.startsWith("/[year]/[day]") && year && day && (
+        <li className="flex flex-col sm:flex-row">
+          {router.pathname !== "/[year]/[day]" && (
+            <button
+              className="btn-ghost btn flex flex-row sm:btn-circle"
+              onClick={() => router.push(`/${year}/${day}/`)}
+            >
+              <span className="sm:hidden">go to problem</span>
+              <FaReadme className="h-6 w-6" />
+            </button>
+          )}
+          {!router.pathname.includes("share") && (
+            <button
+              className="btn-ghost btn flex flex-row sm:btn-circle"
+              onClick={() => router.push(`/${year}/${day}/share`)}
+            >
+              <span className="sm:hidden">share code</span>
+              <FaFileCode className="h-6 w-6" />
+            </button>
+          )}
+          {!router.pathname.includes("scoreboard") && (
+            <button
+              className="btn-ghost btn flex flex-row sm:btn-circle"
+              onClick={() => router.push(`/${year}/${day}/scoreboard`)}
+            >
+              <span className="sm:hidden">scoreboard</span>
+              <FaChartBar className="h-6 w-6" />
+            </button>
+          )}
+        </li>
+      )}
+    </>
+  );
+};
+
+const HomepageLink = () => {
+  return (
+    <Link
+      className="text-xl font-bold normal-case"
+      href="/"
+      style={{
+        color: "#00ff00",
+        textShadow: "0 0 4px #00cc00",
+      }}
+    >
+      hAOC
+    </Link>
+  );
+};
 
 export const Navbar = () => {
   const { data: session } = useSession();
+
+  const [cookie, setCookie] = useLocalStorage("aocCookie", "");
+
   const router = useRouter();
   const { day, year } = router.query as {
     day: string | undefined;
     year: string | undefined;
   };
 
-  const [cookie, setCookie] = useLocalStorage("aocCookie", "");
-
   return (
     <div className="navbar bg-base-100 px-4">
       <div className="navbar-start">
-        <Link
-          className="text-xl font-bold normal-case"
-          href="/"
-          style={{
-            color: "#00ff00",
-            textShadow: "0 0 4px #00cc00",
-          }}
-        >
-          hAOC
-        </Link>
+        <div className="dropdown">
+          <label tabIndex={0} className="btn-ghost btn sm:hidden">
+            <FaBars />
+          </label>
+          <ul
+            tabIndex={0}
+            className="dropdown-content menu rounded-box menu-compact mt-3 w-52 bg-base-200 p-2 shadow"
+          >
+            <li className="flex flex-row items-center p-2 sm:hidden">
+              <HomepageLink /> homepage
+            </li>
+            {year && day && <CenterButtons year={year} day={day} />}
+          </ul>
+        </div>
+        <div className="hidden sm:inline-block">
+          <HomepageLink />
+        </div>
       </div>
       <div className="navbar-center relative flex flex-row gap-2 md:flex-row">
-        {router.pathname.startsWith("/[year]/[day]") && year && day && (
+        {year && day && (
           <>
-            {!router.pathname.includes("scoreboard") && (
-              <button
-                className="btn-ghost btn-circle btn"
-                onClick={() => router.push(`/${year}/${day}/scoreboard`)}
-              >
-                <FaChartBar className="h-6 w-6" />
-              </button>
-            )}
+            <div className="hidden sm:inline-block">
+              <CenterButtons year={year} day={day} />
+            </div>
             <ProgressDisplay year={year} day={day} />
           </>
         )}
@@ -121,7 +186,7 @@ const ProgressDisplay = ({ year, day }: { year: string; day: string }) => {
           ))}
         </div>
       </div>
-      <div className="mx-2 flex flex-row gap-2">
+      <div className="mx-2 flex flex-col gap-1 sm:flex-row sm:gap-2">
         <Timers year={year} day={day} />
       </div>
     </>
