@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { router, publicProcedure, protectedProcedure } from "../trpc";
+import { protectedProcedure, publicProcedure, router } from "../trpc";
 
 export const aocRouter = router({
   text: protectedProcedure
@@ -17,11 +17,14 @@ export const aocRouter = router({
         user: { id: userId },
       } = ctx.session;
 
-      const info = await fetch(`https://adventofcode.com/${year}/day/${day}`, {
-        headers: {
-          cookie: `session=${cookie}`,
-        },
-      })
+      const info = await customfetch(
+        `https://adventofcode.com/${year}/day/${day}`,
+        {
+          headers: {
+            cookie: `session=${cookie}`,
+          },
+        }
+      )
         .then((res) => res.text())
         .then((text) =>
           text
@@ -93,7 +96,7 @@ export const aocRouter = router({
     .query(({ input }) => {
       const { day, year, cookie } = input;
 
-      return fetch(`https://adventofcode.com/${year}/day/${day}/input`, {
+      return customfetch(`https://adventofcode.com/${year}/day/${day}/input`, {
         headers: {
           Cookie: `session=${cookie}`,
         },
@@ -138,7 +141,7 @@ export const aocRouter = router({
 
       console.log(input);
 
-      const response = await fetch(
+      const response = await customfetch(
         `https://adventofcode.com/${year}/day/${day}/answer`,
         {
           method: "POST",
@@ -168,3 +171,15 @@ export const aocRouter = router({
       return response;
     }),
 });
+
+const customfetch = (url: string, options: RequestInit) => {
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      "User-Agent":
+        "Human Advent of Code - https://aoc.davidemerli.com/ - github.com/davidemerli/haoc",
+    },
+    credentials: "include",
+  });
+};
