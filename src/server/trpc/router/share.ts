@@ -8,30 +8,36 @@ export const shareRouter = router({
         userId: z.string(),
         year: z.string().transform((s) => parseInt(s)),
         day: z.string().transform((s) => parseInt(s)),
+        star: z.string().transform((s) => parseInt(s)),
       })
     )
     .query(async ({ ctx, input }) => {
       return await ctx.prisma.codeSolution
-        .findMany({
+        .findUniqueOrThrow({
           where: {
-            userId: input.userId,
-            year: input.year,
-            day: input.day,
+            userId_day_year_star: {
+              userId: input.userId,
+              year: input.year,
+              day: input.day,
+              star: input.star,
+            },
           },
           include: {
             user: true,
             likes: true,
-            comments: true,
+            comments: {
+              include: {
+                user: true,
+              },
+            },
           },
         })
-        .then((solutions) =>
-          solutions.map((solution) => ({
-            ...solution,
-            liked: solution.likes.some(
-              (like) => like.userId === ctx.session.user.id
-            ),
-          }))
-        );
+        .then((solution) => ({
+          ...solution,
+          liked: solution.likes.some(
+            (like) => like.userId === ctx.session.user.id
+          ),
+        }));
     }),
   list: protectedProcedure
     .input(
@@ -159,9 +165,6 @@ export const shareRouter = router({
       .input(
         z.object({
           codeSolutionId: z.string(),
-          year: z.string().transform((s) => parseInt(s)),
-          day: z.string().transform((s) => parseInt(s)),
-          star: z.string().transform((s) => parseInt(s)),
           comment: z.string(),
         })
       )

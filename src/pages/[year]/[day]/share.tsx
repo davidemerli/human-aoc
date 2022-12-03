@@ -106,15 +106,15 @@ const CodeShareCard = ({ solution }: { solution: SolutionType }) => {
 
   return (
     <div
-      className="flex cursor-pointer flex-col gap-2 rounded-xl bg-base-300 p-2 shadow-xl transition-all hover:scale-105"
+      className="flex w-48 cursor-pointer flex-col gap-2 rounded-xl bg-base-300 p-2 shadow-xl transition-all hover:scale-105"
       onClick={() => {
         router.push(
-          `/${solution.year}/${solution.day}/share/${solution.user.id}`
+          `/${solution.year}/${solution.day}/share/${solution.user.id}?star=${solution.star}`
         );
       }}
     >
       <div className="flex items-start gap-4 pr-2">
-        <div className="avatar h-10 w-10">
+        <div className="avatar h-10 w-10 flex-shrink-0">
           <Image
             className="rounded-full"
             src={solution.user.image ?? ""}
@@ -122,9 +122,9 @@ const CodeShareCard = ({ solution }: { solution: SolutionType }) => {
             layout="fill"
           />
         </div>
-        <h2 className="text-2xl">{solution.user.name}</h2>
+        <h2 className="pb-4 text-2xl leading-6">{solution.user.name}</h2>
       </div>
-      <div className="flex items-center gap-6">
+      <div className="mt-auto flex items-center gap-6">
         <span className="mr-auto flex items-center gap-2">
           <FaStar className="text-gold" /> {solution.star}
         </span>
