@@ -139,8 +139,6 @@ export const aocRouter = router({
     .mutation(async ({ input }) => {
       const { day, year, star, answer, cookie } = input;
 
-      console.log(input);
-
       const response = await customfetch(
         `https://adventofcode.com/${year}/day/${day}/answer`,
         {
