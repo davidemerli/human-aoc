@@ -1,5 +1,6 @@
 import classNames from "classnames";
 import { useSession } from "next-auth/react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useRef, useState } from "react";
@@ -10,13 +11,16 @@ import {
   FaThumbsUp,
   FaTimes,
 } from "react-icons/fa";
-import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import { atomOneDark } from "react-syntax-highlighter/dist/cjs/styles/hljs";
 import { toast } from "react-toastify";
 import { Layout } from "../../../../components/Layout";
 import type { RouterOutputs } from "../../../../utils/trpc";
 import { trpc } from "../../../../utils/trpc";
 import type { NextPageWithLayout } from "../../../_app";
+
+const SyntaxHighlighter = dynamic(() => import("react-syntax-highlighter"), {
+  ssr: false,
+});
 
 const SolutionPage: NextPageWithLayout = () => {
   const router = useRouter();
