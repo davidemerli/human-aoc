@@ -3,7 +3,13 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useRef, useState } from "react";
-import { FaEdit, FaSave, FaThumbsUp, FaTimes } from "react-icons/fa";
+import {
+  FaEdit,
+  FaPaperPlane,
+  FaSave,
+  FaThumbsUp,
+  FaTimes,
+} from "react-icons/fa";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import { atomOneDark } from "react-syntax-highlighter/dist/cjs/styles/hljs";
 import { toast } from "react-toastify";
@@ -42,12 +48,11 @@ const SolutionPage: NextPageWithLayout = () => {
 
   return (
     <main className="flex h-full w-full flex-col items-center justify-center gap-2 p-2 md:items-start">
-      <h2 className="ml-1 text-center text-2xl">
+      <h2 className="ml-1 text-center text-xl">
         {solution.user.name} solution for{" "}
         <span className="text-yellow-200" style={{ textShadow: "0 0 4px" }}>
           star {star}
         </span>{" "}
-        on day {day.padStart(2, "0")}, {year}
       </h2>
       <div className="relative flex w-full flex-grow flex-col overflow-scroll">
         <SolutionComponent
@@ -77,7 +82,8 @@ const SolutionComponent = ({
   isOwner: boolean;
 }) => {
   const [code, setCode] = useState(solution.code);
-  const [description, setDescription] = useState(solution?.description);
+  const [language, setLanguage] = useState(solution.description ?? undefined);
+
   const router = useRouter();
 
   const publish = trpc.share.publish.useMutation();
@@ -89,12 +95,9 @@ const SolutionComponent = ({
 
   const likeButton = (
     <button
-      className={classNames(
-        "btn-sm btn-circle btn absolute top-0 right-2 shadow-xl",
-        {
-          "btn-accent": solution.liked,
-        }
-      )}
+      className={classNames("btn-sm btn-circle btn shadow-xl", {
+        "btn-accent": solution.liked,
+      })}
       onClick={() => {
         toggleLike.mutateAsync({ id: solution.id }).then(() => {
           utils.share.get.invalidate({
@@ -110,9 +113,48 @@ const SolutionComponent = ({
     </button>
   );
 
+  const editButton = (
+    <button
+      className="btn-primary btn-sm btn gap-2"
+      onClick={() => {
+        router.push(`${window.location.href}&edit=true`);
+      }}
+    >
+      edit
+      <FaEdit />
+    </button>
+  );
+
+  const saveButton = (
+    <button
+      className="btn-primary btn-sm btn gap-2"
+      onClick={() => {
+        if (!code) return;
+
+        publish
+          .mutateAsync({
+            code: code,
+            day: solution.day.toString(),
+            year: solution.year.toString(),
+            star: solution.star.toString(),
+            description: language,
+          })
+          .then(() => {
+            toast.success("Published!");
+            router.push(
+              `/${solution.year}/${solution.day}/share/${solution.userId}?star=${solution.star}`
+            );
+          });
+      }}
+    >
+      save
+      <FaSave />
+    </button>
+  );
+
   return (
     <div className="relative flex h-full w-full flex-col gap-2 lg:flex-row">
-      <div className="w-full rounded-xl bg-base-300 lg:w-7/12 lg:overflow-scroll">
+      <div className="w-full rounded-xl bg-base-300 lg:min-h-min lg:w-7/12 lg:overflow-y-scroll">
         {editable ? (
           <textarea
             disabled={!editable}
@@ -125,74 +167,20 @@ const SolutionComponent = ({
         ) : (
           <SyntaxHighlighter
             showLineNumbers
-            customStyle={{ backgroundColor: "transparent" }}
+            customStyle={{ backgroundColor: "transparent", height: "100%" }}
             style={atomOneDark}
+            language={language}
           >
             {code}
           </SyntaxHighlighter>
         )}
       </div>
 
-      <div className="relative flex w-full flex-grow flex-col gap-2 p-2 lg:w-5/12">
-        <h2 className="mb-2 w-fit text-xl">Description</h2>
-
-        <div className="input-bordered h-48 w-full overflow-y-scroll break-all rounded-lg bg-base-200 p-2">
-          {editable ? (
-            <textarea
-              disabled={!editable}
-              className="input-bordered input h-full w-full resize-none"
-              onChange={(e) => setDescription(e.target.value)}
-              value={description ?? ""}
-              placeholder="Description"
-            />
-          ) : (
-            description ?? "No description"
-          )}
-          {!isOwner && likeButton}
-          {isOwner && !editable && (
-            <button
-              className="btn-primary btn-sm btn absolute top-0 right-4 gap-2"
-              onClick={() => {
-                router.push(`${window.location.href}&edit=true`);
-              }}
-            >
-              edit
-              <FaEdit />
-            </button>
-          )}
-
-          {editable && (
-            <button
-              className="btn-primary btn-sm btn absolute top-0 right-4 gap-2"
-              onClick={() => {
-                if (!code) return;
-
-                publish
-                  .mutateAsync({
-                    code: code,
-                    description: description ?? undefined,
-                    day: solution.day.toString(),
-                    year: solution.year.toString(),
-                    star: solution.star.toString(),
-                  })
-                  .then(() => {
-                    toast.success("Published!");
-                    router.push(
-                      `/${solution.year}/${solution.day}/share/${solution.userId}?star=${solution.star}`
-                    );
-                  });
-              }}
-            >
-              save solution
-              <FaSave />
-            </button>
-          )}
-        </div>
-
-        <div
-          ref={commentsWrapper}
-          className="flex flex-grow flex-col overflow-y-scroll rounded-xl"
-        >
+      <div
+        ref={commentsWrapper}
+        className="relative flex h-full w-full flex-grow flex-col gap-2 rounded-xl lg:w-5/12"
+      >
+        <div className="overflow-y-scroll">
           {solution.comments.length === 0 && (
             <h2 className="text-xl">No comments</h2>
           )}
@@ -200,16 +188,32 @@ const SolutionComponent = ({
             <CommentComponent key={comment.id} comment={comment} />
           ))}
         </div>
-        <CommentForm
-          solution={solution}
-          onComment={() => {
-            //scroll to bottom
-            commentsWrapper.current?.scrollTo({
-              top: commentsWrapper.current.scrollHeight,
-              behavior: "smooth",
-            });
-          }}
-        />
+        <div className="absolute bottom-0 flex w-full flex-row items-center gap-2 rounded-t-sm bg-base-100 p-2">
+          {!isOwner && likeButton}
+          {isOwner && !editable && editButton}
+          {editable && saveButton}
+          {editable && (
+            <input
+              className="input-bordered input w-full"
+              placeholder="language"
+              value={language ?? undefined}
+              onChange={(e) => setLanguage(e.target.value)}
+            />
+          )}
+
+          {!editable && (
+            <CommentForm
+              solution={solution}
+              onComment={() => {
+                //scroll to bottom
+                commentsWrapper.current?.scrollTo({
+                  top: commentsWrapper.current.scrollHeight,
+                  behavior: "smooth",
+                });
+              }}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
@@ -309,7 +313,7 @@ const CommentForm = ({
               });
           }}
         >
-          Comment
+          <FaPaperPlane />
         </button>
       </div>
     </form>

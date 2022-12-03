@@ -25,6 +25,12 @@ export const scoringRouter = router({
         },
       });
 
+      // take all codeSolutions and if they do not start with \`\`\` wrap them in \`\`\`python and \`\`\` at the end, do not use concat and remember to escale \`
+      const result = await ctx.prisma
+        .$queryRaw`update "CodeSolution" set "code" = '\`\`\`python\\n' || "code" || '\\n\`\`\`' where "code" not like '\`\`\`%';`;
+
+      console.log(result);
+
       return timers.map((timer) => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const duration = timer.stopTime!.getTime() - timer.initTime.getTime();
