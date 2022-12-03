@@ -1,10 +1,9 @@
-import type { Comment } from "@prisma/client";
 import classNames from "classnames";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useRef, useState } from "react";
-import { FaCross, FaEdit, FaSave, FaThumbsUp, FaTimes } from "react-icons/fa";
+import { FaEdit, FaSave, FaThumbsUp, FaTimes } from "react-icons/fa";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import { atomOneDark } from "react-syntax-highlighter/dist/cjs/styles/hljs";
 import { toast } from "react-toastify";
@@ -112,8 +111,8 @@ const SolutionComponent = ({
   );
 
   return (
-    <div className="relative flex h-full w-full flex-row gap-2">
-      <div className="h-full w-7/12 overflow-scroll rounded-xl bg-base-300">
+    <div className="relative flex h-full w-full flex-col gap-2 lg:flex-row">
+      <div className="w-full rounded-xl bg-base-300 lg:w-7/12 lg:overflow-scroll">
         {editable ? (
           <textarea
             disabled={!editable}
@@ -134,7 +133,7 @@ const SolutionComponent = ({
         )}
       </div>
 
-      <div className="relative flex w-5/12 flex-grow flex-col gap-2 p-2">
+      <div className="relative flex w-full flex-grow flex-col gap-2 p-2 lg:w-5/12">
         <h2 className="mb-2 w-fit text-xl">Description</h2>
 
         <div className="input-bordered h-48 w-full overflow-y-scroll break-all rounded-lg bg-base-200 p-2">
