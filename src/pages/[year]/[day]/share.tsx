@@ -83,14 +83,30 @@ const CodeShareDayPage: NextPageWithLayout = () => {
           </div>
         )}
       </div>
-      <button
-        className="btn-primary btn-circle btn absolute bottom-4 right-4"
-        onClick={() => {
-          router.push(`/${year}/${day}/share/${session.user?.id}?edit=true`);
-        }}
-      >
-        <FaPlus />
-      </button>
+      <div className="absolute bottom-4 right-4 flex gap-2">
+        <button
+          className="btn-primary btn gap-2"
+          onClick={() => {
+            router.push(
+              `/${year}/${day}/share/${session.user?.id}?star=1&edit=true`
+            );
+          }}
+        >
+          star 1
+          <FaPlus />
+        </button>
+        <button
+          className="btn-primary btn gap-2"
+          onClick={() => {
+            router.push(
+              `/${year}/${day}/share/${session.user?.id}?star=2&edit=true`
+            );
+          }}
+        >
+          star 2
+          <FaPlus />
+        </button>
+      </div>
     </main>
   );
 };
