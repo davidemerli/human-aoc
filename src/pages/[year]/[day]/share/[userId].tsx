@@ -13,6 +13,7 @@ import {
 } from "react-icons/fa";
 import { atomOneDark } from "react-syntax-highlighter/dist/cjs/styles/hljs";
 import { toast } from "react-toastify";
+import { InnerTypeOfFunction } from "zod";
 import { Layout } from "../../../../components/Layout";
 import type { RouterOutputs } from "../../../../utils/trpc";
 import { trpc } from "../../../../utils/trpc";
@@ -52,17 +53,23 @@ const SolutionPage: NextPageWithLayout = () => {
 
   return (
     <main className="flex h-full w-full flex-col items-center justify-center gap-2 p-2 md:items-start">
-      <h2 className="ml-1 text-center text-xl">
-        {solution.user.name} solution for{" "}
-        <span className="text-yellow-200" style={{ textShadow: "0 0 4px" }}>
-          star {star}
-        </span>{" "}
-      </h2>
+      {solution && (
+        <h2 className="ml-1 text-center text-xl">
+          {solution.user.name} solution for{" "}
+          <span className="text-yellow-200" style={{ textShadow: "0 0 4px" }}>
+            star {star}
+          </span>{" "}
+        </h2>
+      )}
       <div className="relative flex w-full flex-grow flex-col overflow-scroll">
         <SolutionComponent
           key={star}
           editable={editable}
           solution={solution}
+          day={day}
+          year={year}
+          star={star}
+          userId={userId}
           isOwner={isOwner}
         />
       </div>
@@ -80,13 +87,21 @@ const SolutionComponent = ({
   solution,
   editable,
   isOwner,
+  day,
+  year,
+  star,
+  userId,
 }: {
   solution: SolutionType;
   editable: boolean;
   isOwner: boolean;
+  day: string;
+  year: string;
+  star: string;
+  userId: string;
 }) => {
-  const [code, setCode] = useState(solution.code);
-  const [language, setLanguage] = useState(solution.description ?? undefined);
+  const [code, setCode] = useState(solution?.code ?? "");
+  const [language, setLanguage] = useState(solution?.description ?? undefined);
 
   const router = useRouter();
 
@@ -98,23 +113,27 @@ const SolutionComponent = ({
   const commentsWrapper = useRef<HTMLDivElement>(null);
 
   const likeButton = (
-    <button
-      className={classNames("btn-sm btn-circle btn shadow-xl", {
-        "btn-accent": solution.liked,
-      })}
-      onClick={() => {
-        toggleLike.mutateAsync({ id: solution.id }).then(() => {
-          utils.share.get.invalidate({
-            userId: solution.userId,
-            star: solution.star.toString(),
-            day: solution.day.toString(),
-            year: solution.year.toString(),
-          });
-        });
-      }}
-    >
-      <FaThumbsUp />
-    </button>
+    <>
+      {solution && (
+        <button
+          className={classNames("btn-sm btn-circle btn shadow-xl", {
+            "btn-accent": solution.liked,
+          })}
+          onClick={() => {
+            toggleLike.mutateAsync({ id: solution.id }).then(() => {
+              utils.share.get.invalidate({
+                userId: solution.userId,
+                star: solution.star.toString(),
+                day: solution.day.toString(),
+                year: solution.year.toString(),
+              });
+            });
+          }}
+        >
+          <FaThumbsUp />
+        </button>
+      )}
+    </>
   );
 
   const editButton = (
@@ -138,16 +157,14 @@ const SolutionComponent = ({
         publish
           .mutateAsync({
             code: code,
-            day: solution.day.toString(),
-            year: solution.year.toString(),
-            star: solution.star.toString(),
+            day: day,
+            year: year,
+            star: star,
             description: language,
           })
           .then(() => {
             toast.success("Published!");
-            router.push(
-              `/${solution.year}/${solution.day}/share/${solution.userId}?star=${solution.star}`
-            );
+            router.push(`/${year}/${day}/share/${userId}?star=${star}`);
           });
       }}
     >
@@ -158,13 +175,13 @@ const SolutionComponent = ({
 
   return (
     <div className="relative flex h-full w-full flex-col gap-2 lg:flex-row">
-      <div className="w-full rounded-xl bg-base-300 lg:min-h-min lg:w-7/12 lg:overflow-y-scroll">
+      <div className="w-full rounded-xl bg-base-300 p-1 lg:min-h-min lg:w-7/12 lg:overflow-y-scroll">
         {editable ? (
           <textarea
             disabled={!editable}
             spellCheck={false}
-            className="input-bordered input h-full w-full resize-none p-0 font-mono text-lg"
-            placeholder="Code"
+            className="input-bordered input h-full w-full resize-none bg-base-300 p-0.5 font-mono text-lg"
+            placeholder="code"
             value={code}
             onChange={(e) => setCode(e.target.value)}
           />
@@ -184,14 +201,16 @@ const SolutionComponent = ({
         ref={commentsWrapper}
         className="relative flex h-full w-full flex-grow flex-col gap-2 rounded-xl lg:w-5/12"
       >
-        <div className="overflow-y-scroll">
-          {solution.comments.length === 0 && (
-            <h2 className="text-xl">No comments</h2>
-          )}
-          {solution.comments.map((comment) => (
-            <CommentComponent key={comment.id} comment={comment} />
-          ))}
-        </div>
+        {solution && (
+          <div className="overflow-y-scroll">
+            {solution.comments.length === 0 && (
+              <h2 className="p-2 text-xl">No comments yet</h2>
+            )}
+            {solution.comments.map((comment) => (
+              <CommentComponent key={comment.id} comment={comment} />
+            ))}
+          </div>
+        )}
         <div className="absolute bottom-0 flex w-full flex-row items-center gap-2 rounded-t-sm bg-base-100 p-2">
           {!isOwner && likeButton}
           {isOwner && !editable && editButton}
@@ -205,7 +224,7 @@ const SolutionComponent = ({
             />
           )}
 
-          {!editable && (
+          {!editable && solution && (
             <CommentForm
               solution={solution}
               onComment={() => {
@@ -223,7 +242,7 @@ const SolutionComponent = ({
   );
 };
 
-type CommentType = RouterOutputs["share"]["get"]["comments"][0];
+type CommentType = NonNullable<RouterOutputs["share"]["get"]>["comments"][0];
 
 const CommentComponent = ({ comment }: { comment: CommentType }) => {
   const { data: session, status } = useSession();
@@ -283,7 +302,7 @@ const CommentForm = ({
   solution,
   onComment,
 }: {
-  solution: SolutionType;
+  solution: NonNullable<SolutionType>;
   onComment: () => void;
 }) => {
   const [comment, setComment] = useState("");

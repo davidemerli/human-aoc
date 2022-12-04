@@ -43,17 +43,6 @@ const CodeShareDayPage: NextPageWithLayout = () => {
         {solutions.filter((s) => s.star === 1).length === 0 && (
           <div className="flex items-center justify-center gap-2 p-2">
             <h1 className="text-2xl">No solutions yet!</h1>
-            <button
-              className="btn-primary btn"
-              onClick={() =>
-                router.push(
-                  `/${year}/${day}/share/${session.user?.id}?edit=true`
-                )
-              }
-            >
-              <FaPlus className="mr-2 inline-block" />
-              Add your solution
-            </button>
           </div>
         )}
       </div>
@@ -69,17 +58,6 @@ const CodeShareDayPage: NextPageWithLayout = () => {
         {solutions.filter((s) => s.star === 2).length === 0 && (
           <div className="flex items-center justify-center gap-2 p-2">
             <h1 className="text-2xl">No solutions yet!</h1>
-            <button
-              className="btn-primary btn"
-              onClick={() =>
-                router.push(
-                  `/${year}/${day}/share/${session.user?.id}?edit=true`
-                )
-              }
-            >
-              <FaPlus className="mr-2 inline-block" />
-              Add your solution
-            </button>
           </div>
         )}
       </div>

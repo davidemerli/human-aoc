@@ -13,7 +13,7 @@ export const shareRouter = router({
     )
     .query(async ({ ctx, input }) => {
       return await ctx.prisma.codeSolution
-        .findUniqueOrThrow({
+        .findUnique({
           where: {
             userId_day_year_star: {
               userId: input.userId,
@@ -32,12 +32,16 @@ export const shareRouter = router({
             },
           },
         })
-        .then((solution) => ({
-          ...solution,
-          liked: solution.likes.some(
-            (like) => like.userId === ctx.session.user.id
-          ),
-        }));
+        .then((solution) => {
+          if (!solution) return null;
+
+          return {
+            ...solution,
+            liked: solution?.likes.some(
+              (like) => like.userId === ctx.session.user.id
+            ),
+          };
+        });
     }),
   list: protectedProcedure
     .input(
