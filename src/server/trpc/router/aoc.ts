@@ -38,7 +38,7 @@ export const aocRouter = router({
         .then((text) => ({
           text,
           stars:
-            text.match(/<p>Your puzzle answer was <code>(\d+)<\/code>/g)
+            text.match(/<p>Your puzzle answer was <code>(.*)<\/code>/g)
               ?.length ?? 0,
         }))
         .then((info) => {
