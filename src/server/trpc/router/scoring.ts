@@ -72,6 +72,27 @@ export const scoringRouter = router({
     .query(async ({ ctx, input }) => {
       return getTimersForDayAndYear(ctx.prisma, input.year, input.day);
     }),
+
+  userInfo: protectedProcedure
+    .input(
+      z.object({
+        year: z.string().transform((s) => parseInt(s)),
+        userId: z.string(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      return ctx.prisma.user.findUniqueOrThrow({
+        where: { id: input.userId },
+        include: {
+          timers: {
+            where: {
+              year: input.year,
+              stopTime: { not: null },
+            },
+          },
+        },
+      });
+    }),
 });
 
 const getTimersForDayAndYear = async (

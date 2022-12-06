@@ -50,10 +50,10 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
-  Timer         Timer[]
-  CodeSolution  CodeSolution[]
-  Comment       Comment[]
-  Like          Like[]
+  timers        Timer[]
+  codeSolutions CodeSolution[]
+  comments      Comment[]
+  likes         Like[]
 }
 
 model VerificationToken {

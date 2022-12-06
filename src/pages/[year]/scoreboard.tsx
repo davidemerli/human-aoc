@@ -44,14 +44,14 @@ const GlobalScoreboard: NextPageWithLayout = () => {
                 <span className="flex justify-center text-lg">{index + 1}</span>
               </td>
               <td className="flex items-center gap-4">
-                <div className="avatar h-8 w-8">
+                <a className="avatar h-8 w-8" href={`/${year}/user/${user.id}`}>
                   <Image
                     src={user.image ?? ""}
                     alt={user.name ?? ""}
                     layout="fill"
                     className="rounded-full"
                   />
-                </div>
+                </a>
                 <span
                   className={classNames("text-lg", {
                     "text-gold": index === 0,
