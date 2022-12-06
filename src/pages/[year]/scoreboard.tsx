@@ -32,6 +32,9 @@ const GlobalScoreboard: NextPageWithLayout = () => {
             <th>Name</th>
             <th>Score</th>
             <th>Stars</th>
+            <th>#G</th>
+            <th>#S</th>
+            <th>#B</th>
           </tr>
         </thead>
         <tbody>
@@ -80,6 +83,25 @@ const GlobalScoreboard: NextPageWithLayout = () => {
                   <FaStar className="h-4 w-4 text-yellow-200" />
                 </div>
               </td>
+              {user.medals.map((numMedals, index) => (
+                <td key={index}>
+                  <div className="flex items-center gap-2">
+                    <span
+                      style={{ textShadow: numMedals > 0 ? "0 0 3px" : "none" }}
+                      className={classNames(
+                        "<text-light></text-light> w-full text-center font-mono text-xl text-base-content",
+                        {
+                          "text-gold": numMedals !== 0 && index === 0,
+                          "text-silver": numMedals !== 0 && index === 1,
+                          "text-bronze": numMedals !== 0 && index === 2,
+                        }
+                      )}
+                    >
+                      {numMedals}
+                    </span>
+                  </div>
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>

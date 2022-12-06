@@ -13,6 +13,9 @@ export const scoringRouter = router({
         {
           score: number;
           stars: number;
+          golds: number;
+          silvers: number;
+          bronzes: number;
         }
       >();
 
@@ -31,9 +34,14 @@ export const scoringRouter = router({
               const points =
                 (scoreMap.get(timer.userId)?.score ?? 0) + (timers.length - i);
 
+              const previousStats = scoreMap.get(timer.userId);
+
               scoreMap.set(timer.userId, {
                 score: points,
-                stars: (scoreMap.get(timer.userId)?.stars ?? 0) + 1,
+                stars: (previousStats?.stars ?? 0) + 1,
+                golds: (previousStats?.golds ?? 0) + (i == 0 ? 1 : 0),
+                silvers: (previousStats?.silvers ?? 0) + (i == 1 ? 1 : 0),
+                bronzes: (previousStats?.bronzes ?? 0) + (i == 2 ? 1 : 0),
               });
             });
         }
@@ -44,6 +52,11 @@ export const scoringRouter = router({
           ...user,
           score: scoreMap.get(user.id)?.score ?? 0,
           stars: scoreMap.get(user.id)?.stars ?? 0,
+          medals: [
+            scoreMap.get(user.id)?.golds ?? 0,
+            scoreMap.get(user.id)?.silvers ?? 0,
+            scoreMap.get(user.id)?.bronzes ?? 0,
+          ],
         }))
         .sort((a, b) => b.score - a.score);
     }),
