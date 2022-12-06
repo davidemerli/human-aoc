@@ -46,6 +46,9 @@ const YearPage: NextPageWithLayout = () => {
           25
         </a>
       </div>
+      <a href={`/${year}/scoreboard`} className="btn-primary btn m-4">
+        Leaderboard
+      </a>
     </main>
   );
 };
