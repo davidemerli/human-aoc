@@ -8,7 +8,7 @@ COPY yarn.lock /app/
 RUN yarn --frozen-lockfile
 
 
-COPY prisma /app/
+COPY prisma /app/prisma
 COPY .env /app/
 
 RUN yarn prisma db push
