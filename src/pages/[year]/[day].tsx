@@ -1,14 +1,10 @@
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import classNames from "classnames";
 import { useRouter } from "next/router";
-import { useState } from "react";
-import { FaChevronRight } from "react-icons/fa";
 import { AocInput } from "../../components/AocInput";
 import { AocText } from "../../components/AocText";
 import { Layout } from "../../components/Layout";
 import { useLocalStorage } from "../../utils/localStorage";
 import useMediaQuery from "../../utils/mediaQuery";
-import { trpc } from "../../utils/trpc";
 import type { NextPageWithLayout } from "../_app";
 
 type Tabs = "input" | "text";
@@ -50,7 +46,6 @@ const Home: NextPageWithLayout = () => {
         {(activeTab === "text" || lg) && <AocText year={year} day={day} />}
         {(activeTab === "input" || lg) && <AocInput year={year} day={day} />}
       </div>
-      <ReactQueryDevtools />
     </main>
   );
 };
