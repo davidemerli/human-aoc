@@ -1,5 +1,6 @@
 import NextAuth, { type NextAuthOptions } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
+import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 
 import { env } from "../../../env/server.mjs";
@@ -12,14 +13,16 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = user.id;
 
-        // from https://avatars.githubusercontent.com/u/[USER_ID]?v=4 obtain [USER_ID] from this url
-        const githubId = user.image?.match(/u\/(\d+)/)?.[1] ?? "";
+        if (user.image?.includes("avatars.githubusercontent.com")) {
+          // from https://avatars.githubusercontent.com/u/[USER_ID]?v=4 obtain [USER_ID] from this url
+          const githubId = user.image?.match(/u\/(\d+)/)?.[1] ?? "";
 
-        session.user.githubUsername = await fetch(
-          `https://api.github.com/user/${githubId}`
-        )
-          .then((res) => res.json())
-          .then((res) => res.login as string);
+          session.user.githubUsername = await fetch(
+            `https://api.github.com/user/${githubId}`
+          )
+            .then((res) => res.json())
+            .then((res) => res.login as string);
+        }
       }
 
       return session;
@@ -31,6 +34,10 @@ export const authOptions: NextAuthOptions = {
     GithubProvider({
       clientId: env.GITHUB_CLIENT_ID,
       clientSecret: env.GITHUB_CLIENT_SECRET,
+    }),
+    GoogleProvider({
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
     }),
   ],
 };

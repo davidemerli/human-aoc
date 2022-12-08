@@ -4,7 +4,7 @@ import { signIn, useSession } from "next-auth/react";
 import Head from "next/head";
 import Link from "next/link";
 import { useMemo } from "react";
-import { FaCheckCircle, FaGithub } from "react-icons/fa";
+import { FaCheckCircle, FaGithub, FaGoogle } from "react-icons/fa";
 import { Layout } from "../components/Layout";
 import { newUTCDate } from "../components/Navbar";
 import { useLocalStorage } from "../utils/localStorage";
@@ -80,13 +80,17 @@ const Home: NextPageWithLayout = () => {
           </>
         )}
         {status === "unauthenticated" && (
-          <>
+          <div className="flex flex-col gap-2">
             <h2 className="mt-8 text-2xl">You are not signed in. </h2>
-            <button className="btn m-2 gap-2" onClick={() => signIn("github")}>
+            <button className="btn gap-2" onClick={() => signIn("github")}>
               <FaGithub size={20} />
               Sign in with GitHub
             </button>
-          </>
+            <button className="btn gap-2" onClick={() => signIn("google")}>
+              <FaGoogle size={20} />
+              Sign in with google
+            </button>
+          </div>
         )}
         <div
           className={classNames(
