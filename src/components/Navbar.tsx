@@ -22,7 +22,7 @@ const CenterButtons = ({ year, day }: { year: string; day: string }) => {
   return (
     <>
       {router.pathname.startsWith("/[year]/[day]") && year && day && (
-        <li className="flex flex-col sm:flex-row gap-2">
+        <li className="flex flex-col gap-2 sm:flex-row">
           <button
             disabled={router.pathname === "/[year]/[day]"}
             className="btn-ghost btn flex flex-row sm:btn-circle"
@@ -171,7 +171,6 @@ const ProgressDisplay = ({ year, day }: { year: string; day: string }) => {
     isError,
   } = trpc.aoc.text.useQuery({ day, year, cookie: cookie });
 
-  if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Error</div>;
 
   return (
@@ -180,26 +179,32 @@ const ProgressDisplay = ({ year, day }: { year: string; day: string }) => {
         <a className="text-xl normal-case">
           {year} Day {day}
         </a>
-        <div className="mt-2.5 ml-2">
-          {new Array(problemInfo.stars).fill(0).map((_, i) => (
-            <span
-              key={i}
-              className="text-4xl text-yellow-200"
-              style={{ textShadow: "0 0 4px" }}
-            >
-              *
-            </span>
-          ))}
-          {new Array(2 - problemInfo.stars).fill(0).map((_, i) => (
-            <span key={i} className="text-4xl text-white text-opacity-20">
-              *
-            </span>
-          ))}
+        {isLoading ? (
+          <span className="ml-2">Loading...</span>
+        ) : (
+          <div className="mt-2.5 ml-2">
+            {new Array(problemInfo.stars).fill(0).map((_, i) => (
+              <span
+                key={i}
+                className="text-4xl text-yellow-200"
+                style={{ textShadow: "0 0 4px" }}
+              >
+                *
+              </span>
+            ))}
+            {new Array(2 - problemInfo.stars).fill(0).map((_, i) => (
+              <span key={i} className="text-4xl text-white text-opacity-20">
+                *
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+      {!isLoading && !isError && (
+        <div className="mx-2 flex flex-col gap-1 sm:flex-row sm:gap-2">
+          <Timers year={year} day={day} />
         </div>
-      </div>
-      <div className="mx-2 flex flex-col gap-1 sm:flex-row sm:gap-2">
-        <Timers year={year} day={day} />
-      </div>
+      )}
     </>
   );
 };
