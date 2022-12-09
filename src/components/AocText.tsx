@@ -5,7 +5,9 @@ export const AocText = ({ year, day }: { year: string; day: string }) => {
   const { data: problemInfo, isLoading, isError } = useAocText({ year, day });
 
   if (isLoading) {
-    return <AocStyle className="h-full w-full overflow-scroll">Loading...</AocStyle>;
+    return (
+      <AocStyle className="h-full w-full overflow-scroll">Loading...</AocStyle>
+    );
   }
 
   if (isError || !problemInfo) {
@@ -21,17 +23,19 @@ export const AocText = ({ year, day }: { year: string; day: string }) => {
 };
 
 export const AocStyle = styled.div`
+  @import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap");
+
   font-family: "Roboto Mono", monospace;
 
   h2 {
-    color: #ffffff;
+    color: #efefef;
     margin-top: 1em;
     margin-bottom: 1em;
     white-space: nowrap;
   }
 
   em {
-    color: #ffffff;
+    color: #d4d4d4;
     font-style: normal;
     font-weight: bold;
     text-shadow: 0 0 2px gray;
@@ -51,22 +55,25 @@ export const AocStyle = styled.div`
     text-shadow: 0 0 4px #ffff66;
   }
 
-  pre,
   code {
-    //avoid padding messing up the first line
-    padding: 0;
-    margin: 0;
+    padding: 0.15rem;
+    border-radius: 0.25rem;
   }
 
   pre {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+  }
+
+  pre,
+  code {
+    margin: 0;
     font-family: "Roboto Mono", monospace;
     letter-spacing: 0.1rem;
     font-size: 1rem;
     line-height: 1.55rem;
-    color: #ffffff66;
+    color: #ffffff99;
     background-color: #1f1f1f;
-    border-radius: 0.5rem;
-    padding: 0.5rem;
     overflow: scroll;
   }
 
