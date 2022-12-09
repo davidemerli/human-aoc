@@ -26,12 +26,17 @@ export const AocInput = ({ year, day }: { year: string; day: string }) => {
   const [answer, setAnswer] = useState("");
   const [cookie] = useLocalStorage("aocCookie", "");
 
-  if (isLoadingInput || isLoadingStars) {
-    return <div>Loading...</div>;
-  }
+  const isLoadingState = isLoadingInput || isLoadingStars;
+  const isErrorState = isErrorInput || isErrorStars || !text;
 
-  if (isErrorInput || isErrorStars || !text) {
-    return <div>Error</div>;
+  if (isLoadingState || isErrorState) {
+    return (
+      <div className="relative flex h-full w-full flex-col gap-2 rounded-xl bg-base-300 p-4 lg:max-w-lg">
+        <pre className="flex-grow overflow-y-scroll whitespace-pre-wrap font-mono">
+          {isLoadingInput ? 'Loading...' : 'Error. Try again'}
+        </pre>
+      </div>
+    );
   }
 
   const lines = text.split("\n");

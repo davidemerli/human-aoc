@@ -22,34 +22,33 @@ const CenterButtons = ({ year, day }: { year: string; day: string }) => {
   return (
     <>
       {router.pathname.startsWith("/[year]/[day]") && year && day && (
-        <li className="flex flex-col sm:flex-row">
-          {router.pathname !== "/[year]/[day]" && (
-            <button
-              className="btn-ghost btn flex flex-row sm:btn-circle"
-              onClick={() => router.push(`/${year}/${day}/`)}
-            >
-              <span className="sm:hidden">go to problem</span>
-              <FaReadme className="h-6 w-6" />
-            </button>
-          )}
-          {!router.pathname.includes("share") && (
-            <button
-              className="btn-ghost btn flex flex-row sm:btn-circle"
-              onClick={() => router.push(`/${year}/${day}/share`)}
-            >
-              <span className="sm:hidden">share code</span>
-              <FaFileCode className="h-6 w-6" />
-            </button>
-          )}
-          {!router.pathname.includes("scoreboard") && (
-            <button
-              className="btn-ghost btn flex flex-row sm:btn-circle"
-              onClick={() => router.push(`/${year}/${day}/scoreboard`)}
-            >
-              <span className="sm:hidden">scoreboard</span>
-              <FaChartBar className="h-6 w-6" />
-            </button>
-          )}
+        <li className="flex flex-col gap-2 sm:flex-row">
+          <button
+            disabled={router.pathname === "/[year]/[day]"}
+            className="btn-ghost btn flex flex-row sm:btn-circle"
+            onClick={() => router.push(`/${year}/${day}/`)}
+          >
+            <span className="sm:hidden">go to problem</span>
+            <FaReadme className="h-6 w-6" />
+          </button>
+
+          <button
+            disabled={router.pathname.includes("share")}
+            className="btn-ghost btn flex flex-row sm:btn-circle"
+            onClick={() => router.push(`/${year}/${day}/share`)}
+          >
+            <span className="sm:hidden">share code</span>
+            <FaFileCode className="h-6 w-6" />
+          </button>
+
+          <button
+            disabled={router.pathname.includes("scoreboard")}
+            className="btn-ghost btn flex flex-row sm:btn-circle"
+            onClick={() => router.push(`/${year}/${day}/scoreboard`)}
+          >
+            <span className="sm:hidden">scoreboard</span>
+            <FaChartBar className="h-6 w-6" />
+          </button>
         </li>
       )}
     </>
@@ -58,16 +57,28 @@ const CenterButtons = ({ year, day }: { year: string; day: string }) => {
 
 const HomepageLink = () => {
   return (
-    <Link
-      className="text-xl font-bold normal-case"
-      href="/"
-      style={{
-        color: "#00ff00",
-        textShadow: "0 0 4px #00cc00",
-      }}
-    >
-      hAOC
-    </Link>
+    <div className="flex gap-6">
+      <Link
+        className="text-xl font-bold normal-case"
+        href="/"
+        style={{
+          color: "#00ff00",
+          textShadow: "0 0 4px #00cc00",
+        }}
+      >
+        hAOC
+      </Link>
+      <Link
+        className="text-xl font-bold normal-case"
+        href="/2022"
+        style={{
+          color: "#00ff00",
+          textShadow: "0 0 4px #00cc00",
+        }}
+      >
+        2022
+      </Link>
+    </div>
   );
 };
 
@@ -114,7 +125,7 @@ export const Navbar = () => {
         )}
       </div>
       <div className="navbar-end">
-        <div className="dropdown-end dropdown">
+        <div className="dropdown dropdown-end">
           {session?.user && (
             <label tabIndex={0} className="btn-ghost btn-circle avatar btn">
               <Image
@@ -160,7 +171,6 @@ const ProgressDisplay = ({ year, day }: { year: string; day: string }) => {
     isError,
   } = trpc.aoc.text.useQuery({ day, year, cookie: cookie });
 
-  if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Error</div>;
 
   return (
@@ -169,26 +179,32 @@ const ProgressDisplay = ({ year, day }: { year: string; day: string }) => {
         <a className="text-xl normal-case">
           {year} Day {day}
         </a>
-        <div className="mt-2.5 ml-2">
-          {new Array(problemInfo.stars).fill(0).map((_, i) => (
-            <span
-              key={i}
-              className="text-4xl text-yellow-200"
-              style={{ textShadow: "0 0 4px" }}
-            >
-              *
-            </span>
-          ))}
-          {new Array(2 - problemInfo.stars).fill(0).map((_, i) => (
-            <span key={i} className="text-4xl text-white text-opacity-20">
-              *
-            </span>
-          ))}
+        {isLoading ? (
+          <span className="ml-2">Loading...</span>
+        ) : (
+          <div className="mt-2.5 ml-2">
+            {new Array(problemInfo.stars).fill(0).map((_, i) => (
+              <span
+                key={i}
+                className="text-4xl text-yellow-200"
+                style={{ textShadow: "0 0 4px" }}
+              >
+                *
+              </span>
+            ))}
+            {new Array(2 - problemInfo.stars).fill(0).map((_, i) => (
+              <span key={i} className="text-4xl text-white text-opacity-20">
+                *
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+      {!isLoading && !isError && (
+        <div className="mx-2 flex flex-col gap-1 sm:flex-row sm:gap-2">
+          <Timers year={year} day={day} />
         </div>
-      </div>
-      <div className="mx-2 flex flex-col gap-1 sm:flex-row sm:gap-2">
-        <Timers year={year} day={day} />
-      </div>
+      )}
     </>
   );
 };
