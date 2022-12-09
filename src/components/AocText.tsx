@@ -5,11 +5,11 @@ export const AocText = ({ year, day }: { year: string; day: string }) => {
   const { data: problemInfo, isLoading, isError } = useAocText({ year, day });
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <AocStyle className="h-full w-full overflow-scroll">Loading...</AocStyle>;
   }
 
   if (isError || !problemInfo) {
-    return <div>Error</div>;
+    return <AocStyle className="h-full w-full overflow-scroll">Error</AocStyle>;
   }
 
   return (
