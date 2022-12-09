@@ -22,34 +22,33 @@ const CenterButtons = ({ year, day }: { year: string; day: string }) => {
   return (
     <>
       {router.pathname.startsWith("/[year]/[day]") && year && day && (
-        <li className="flex flex-col sm:flex-row">
-          {router.pathname !== "/[year]/[day]" && (
-            <button
-              className="btn-ghost btn flex flex-row sm:btn-circle"
-              onClick={() => router.push(`/${year}/${day}/`)}
-            >
-              <span className="sm:hidden">go to problem</span>
-              <FaReadme className="h-6 w-6" />
-            </button>
-          )}
-          {!router.pathname.includes("share") && (
-            <button
-              className="btn-ghost btn flex flex-row sm:btn-circle"
-              onClick={() => router.push(`/${year}/${day}/share`)}
-            >
-              <span className="sm:hidden">share code</span>
-              <FaFileCode className="h-6 w-6" />
-            </button>
-          )}
-          {!router.pathname.includes("scoreboard") && (
-            <button
-              className="btn-ghost btn flex flex-row sm:btn-circle"
-              onClick={() => router.push(`/${year}/${day}/scoreboard`)}
-            >
-              <span className="sm:hidden">scoreboard</span>
-              <FaChartBar className="h-6 w-6" />
-            </button>
-          )}
+        <li className="flex flex-col sm:flex-row gap-2">
+          <button
+            disabled={router.pathname === "/[year]/[day]"}
+            className="btn-ghost btn flex flex-row sm:btn-circle"
+            onClick={() => router.push(`/${year}/${day}/`)}
+          >
+            <span className="sm:hidden">go to problem</span>
+            <FaReadme className="h-6 w-6" />
+          </button>
+
+          <button
+            disabled={router.pathname.includes("share")}
+            className="btn-ghost btn flex flex-row sm:btn-circle"
+            onClick={() => router.push(`/${year}/${day}/share`)}
+          >
+            <span className="sm:hidden">share code</span>
+            <FaFileCode className="h-6 w-6" />
+          </button>
+
+          <button
+            disabled={router.pathname.includes("scoreboard")}
+            className="btn-ghost btn flex flex-row sm:btn-circle"
+            onClick={() => router.push(`/${year}/${day}/scoreboard`)}
+          >
+            <span className="sm:hidden">scoreboard</span>
+            <FaChartBar className="h-6 w-6" />
+          </button>
         </li>
       )}
     </>
@@ -58,16 +57,28 @@ const CenterButtons = ({ year, day }: { year: string; day: string }) => {
 
 const HomepageLink = () => {
   return (
-    <Link
-      className="text-xl font-bold normal-case"
-      href="/"
-      style={{
-        color: "#00ff00",
-        textShadow: "0 0 4px #00cc00",
-      }}
-    >
-      hAOC
-    </Link>
+    <div className="flex gap-6">
+      <Link
+        className="text-xl font-bold normal-case"
+        href="/"
+        style={{
+          color: "#00ff00",
+          textShadow: "0 0 4px #00cc00",
+        }}
+      >
+        hAOC
+      </Link>
+      <Link
+        className="text-xl font-bold normal-case"
+        href="/2022"
+        style={{
+          color: "#00ff00",
+          textShadow: "0 0 4px #00cc00",
+        }}
+      >
+        2022
+      </Link>
+    </div>
   );
 };
 
@@ -114,7 +125,7 @@ export const Navbar = () => {
         )}
       </div>
       <div className="navbar-end">
-        <div className="dropdown-end dropdown">
+        <div className="dropdown dropdown-end">
           {session?.user && (
             <label tabIndex={0} className="btn-ghost btn-circle avatar btn">
               <Image
