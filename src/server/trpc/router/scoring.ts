@@ -32,7 +32,7 @@ export const scoringRouter = router({
             .sort((a, b) => a.duration - b.duration)
             .forEach((timer, i) => {
               const points =
-                (scoreMap.get(timer.userId)?.score ?? 0) + (timers.length - i);
+                (scoreMap.get(timer.userId)?.score ?? 0) + (users.length - i);
 
               const previousStats = scoreMap.get(timer.userId);
 
@@ -56,9 +56,16 @@ export const scoringRouter = router({
             scoreMap.get(user.id)?.golds ?? 0,
             scoreMap.get(user.id)?.silvers ?? 0,
             scoreMap.get(user.id)?.bronzes ?? 0,
-          ],
+          ] as [number, number, number],
         }))
-        .sort((a, b) => b.score - a.score);
+        .sort((a, b) => {
+          // sort based on score, then stars, then golds, then silvers, then bronzes
+          if (a.score != b.score) return b.score - a.score;
+          if (a.stars != b.stars) return b.stars - a.stars;
+          if (a.medals[0] != b.medals[0]) return b.medals[0] - a.medals[0];
+          if (a.medals[1] != b.medals[1]) return b.medals[1] - a.medals[1];
+          if (a.medals[2] != b.medals[2]) return b.medals[2] - a.medals[2];
+        });
     }),
 
   //TODO: may be public
