@@ -38,6 +38,7 @@ const SolutionPage: NextPageWithLayout = () => {
     data: solution,
     isError,
     isLoading,
+    refetch: refetchSolution
   } = trpc.share.get.useQuery({ userId, day, year, star });
 
   if (isLoading || status !== "authenticated") {
@@ -66,6 +67,7 @@ const SolutionPage: NextPageWithLayout = () => {
           key={star}
           editable={editable}
           solution={solution}
+          refetchSolution={refetchSolution}
           day={day}
           year={year}
           star={star}
@@ -85,6 +87,7 @@ type SolutionType = RouterOutputs["share"]["get"];
 
 const SolutionComponent = ({
   solution,
+  refetchSolution,
   editable,
   isOwner,
   day,
@@ -93,6 +96,7 @@ const SolutionComponent = ({
   userId,
 }: {
   solution: SolutionType;
+  refetchSolution: () => void;
   editable: boolean;
   isOwner: boolean;
   day: string;
@@ -207,7 +211,7 @@ const SolutionComponent = ({
               <h2 className="p-2 text-xl">No comments yet</h2>
             )}
             {solution.comments.map((comment) => (
-              <CommentComponent key={comment.id} comment={comment} />
+              <CommentComponent key={comment.id} comment={comment} onCommentDelete={() => refetchSolution()}/>
             ))}
           </div>
         )}
@@ -244,7 +248,7 @@ const SolutionComponent = ({
 
 type CommentType = NonNullable<RouterOutputs["share"]["get"]>["comments"][0];
 
-const CommentComponent = ({ comment }: { comment: CommentType }) => {
+const CommentComponent = ({ comment, onCommentDelete }: { comment: CommentType, onCommentDelete: () => void }) => {
   const { data: session, status } = useSession();
   const deleteComment = trpc.share.comment.delete.useMutation();
   const utils = trpc.useContext();
@@ -276,7 +280,9 @@ const CommentComponent = ({ comment }: { comment: CommentType }) => {
         <button
           className="btn-ghost btn-sm btn-circle btn absolute top-0 right-0 hidden group-hover:flex"
           onClick={() => {
-            deleteComment.mutateAsync({ commentId: comment.id });
+            deleteComment.mutateAsync({ commentId: comment.id }).then(() => {
+              onCommentDelete()
+            });
             utils.share.get.setData((data) => {
               if (!data) return data;
 
