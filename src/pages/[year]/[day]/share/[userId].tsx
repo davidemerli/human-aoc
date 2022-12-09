@@ -202,7 +202,7 @@ const SolutionComponent = ({
         className="relative flex h-full w-full flex-grow flex-col gap-2 rounded-xl lg:w-5/12"
       >
         {solution && (
-          <div className="overflow-y-scroll">
+          <div className="overflow-y-scroll pb-16">
             {solution.comments.length === 0 && (
               <h2 className="p-2 text-xl">No comments yet</h2>
             )}
