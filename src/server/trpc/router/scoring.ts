@@ -65,6 +65,7 @@ export const scoringRouter = router({
           if (a.medals[0] != b.medals[0]) return b.medals[0] - a.medals[0];
           if (a.medals[1] != b.medals[1]) return b.medals[1] - a.medals[1];
           if (a.medals[2] != b.medals[2]) return b.medals[2] - a.medals[2];
+          return 0;
         });
     }),
 
