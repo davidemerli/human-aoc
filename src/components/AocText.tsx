@@ -6,17 +6,17 @@ export const AocText = ({ year, day }: { year: string; day: string }) => {
 
   if (isLoading) {
     return (
-      <AocStyle className="h-full w-full overflow-scroll">Loading...</AocStyle>
+      <AocStyle className="h-full w-full overflow-auto">Loading...</AocStyle>
     );
   }
 
   if (isError || !problemInfo) {
-    return <AocStyle className="h-full w-full overflow-scroll">Error</AocStyle>;
+    return <AocStyle className="h-full w-full overflow-auto">Error</AocStyle>;
   }
 
   return (
     <AocStyle
-      className="h-full w-full overflow-scroll"
+      className="h-full w-full overflow-auto"
       dangerouslySetInnerHTML={{ __html: problemInfo.text }}
     />
   );
@@ -74,7 +74,7 @@ export const AocStyle = styled.div`
     line-height: 1.55rem;
     color: #ffffff99;
     background-color: #1f1f1f;
-    overflow: scroll;
+    overflow: auto;
   }
 
   p {

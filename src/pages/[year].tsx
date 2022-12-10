@@ -6,7 +6,7 @@ const YearPage: NextPageWithLayout = () => {
   const { year } = useRouter().query as { year: string };
 
   return (
-    <main className="flex h-full flex-col items-center justify-center overflow-scroll">
+    <main className="flex h-full flex-col items-center justify-center overflow-auto">
       {/* all days buttons */}
       <div className="flex max-w-md flex-col items-center justify-center gap-4">
         <div className="flex flex-row gap-2">

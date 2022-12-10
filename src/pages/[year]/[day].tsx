@@ -23,7 +23,7 @@ const Home: NextPageWithLayout = () => {
   if (typeof window === "undefined") return null;
 
   return (
-    <main className="relative h-full overflow-scroll">
+    <main className="relative h-full overflow-auto">
       <div className="tabs absolute w-full rounded-sm rounded-t-xl bg-base-200 pt-1 lg:hidden">
         {/* for every type in active tab */}
         {["text", "input"].map((tab) => (
@@ -41,7 +41,7 @@ const Home: NextPageWithLayout = () => {
           </button>
         ))}
       </div>
-      <div className="flex h-full flex-row gap-4 overflow-scroll rounded-xl p-4 pt-16 lg:bg-base-100 lg:pt-4">
+      <div className="flex h-full flex-row gap-4 overflow-auto rounded-xl p-4 pt-16 lg:bg-base-100 lg:pt-4">
         {/* tabs with daisyui */}
         {(activeTab === "text" || lg) && <AocText year={year} day={day} />}
         {(activeTab === "input" || lg) && <AocInput year={year} day={day} />}

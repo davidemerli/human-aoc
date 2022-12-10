@@ -38,7 +38,7 @@ const SolutionPage: NextPageWithLayout = () => {
     data: solution,
     isError,
     isLoading,
-    refetch: refetchSolution
+    refetch: refetchSolution,
   } = trpc.share.get.useQuery({ userId, day, year, star });
 
   if (isLoading || status !== "authenticated") {
@@ -62,7 +62,7 @@ const SolutionPage: NextPageWithLayout = () => {
           </span>{" "}
         </h2>
       )}
-      <div className="relative flex w-full flex-grow flex-col overflow-scroll">
+      <div className="relative flex w-full flex-grow flex-col overflow-auto">
         <SolutionComponent
           key={star}
           editable={editable}
@@ -211,7 +211,11 @@ const SolutionComponent = ({
               <h2 className="p-2 text-xl">No comments yet</h2>
             )}
             {solution.comments.map((comment) => (
-              <CommentComponent key={comment.id} comment={comment} onCommentDelete={() => refetchSolution()}/>
+              <CommentComponent
+                key={comment.id}
+                comment={comment}
+                onCommentDelete={() => refetchSolution()}
+              />
             ))}
           </div>
         )}
@@ -248,7 +252,13 @@ const SolutionComponent = ({
 
 type CommentType = NonNullable<RouterOutputs["share"]["get"]>["comments"][0];
 
-const CommentComponent = ({ comment, onCommentDelete }: { comment: CommentType, onCommentDelete: () => void }) => {
+const CommentComponent = ({
+  comment,
+  onCommentDelete,
+}: {
+  comment: CommentType;
+  onCommentDelete: () => void;
+}) => {
   const { data: session, status } = useSession();
   const deleteComment = trpc.share.comment.delete.useMutation();
   const utils = trpc.useContext();
@@ -281,7 +291,7 @@ const CommentComponent = ({ comment, onCommentDelete }: { comment: CommentType, 
           className="btn-ghost btn-sm btn-circle btn absolute top-0 right-0 hidden group-hover:flex"
           onClick={() => {
             deleteComment.mutateAsync({ commentId: comment.id }).then(() => {
-              onCommentDelete()
+              onCommentDelete();
             });
             utils.share.get.setData((data) => {
               if (!data) return data;
