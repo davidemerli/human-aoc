@@ -56,6 +56,9 @@ const CenterButtons = ({ year, day }: { year: string; day: string }) => {
 };
 
 const HomepageLink = () => {
+  // e.g. until december 2023 show 2022
+  const displayYear = new Date().getFullYear() + (new Date().getMonth() === 11 ? 0 : -1);
+
   return (
     <div className="flex gap-6">
       <Link
@@ -70,13 +73,13 @@ const HomepageLink = () => {
       </Link>
       <Link
         className="text-xl font-bold normal-case"
-        href="/2022"
+        href={`/${displayYear}`}
         style={{
           color: "#00ff00",
           textShadow: "0 0 4px #00cc00",
         }}
       >
-        2022
+        {displayYear}
       </Link>
     </div>
   );
