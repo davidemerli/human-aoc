@@ -26,6 +26,15 @@ export const aocRouter = router({
         }
       )
         .then((res) => res.text())
+        .then((res) => {
+          // if text includes `To play, please identify yourself via one of these services:`
+          // the cookie is invalid, and we throw an error
+          if (res.includes("To play, please identify yourself")) {
+            throw new Error("Invalid cookie");
+          }
+
+          return res;
+        })
         .then((text) =>
           text
             .substring(
